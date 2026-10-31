@@ -2,9 +2,11 @@
 """
 verify_s_block_theorems.py
 ==========================
-Standalone Benchmark & Reproduction Script for Theorems 3.1, 3.2, and 3.3:
-  - Table 3: Classical Eliahou Bound vs. Dual-Block Drift Bound
-  - Table 4: General s-Block Exponential Seesaw Exponents & Asymptotic Thresholds
+Standalone Benchmark & Reproduction Script for Block-Level Theorems:
+  - Table 3: Classical Eliahou Bound vs. Dual-Block Drift Bound (Theorems 3.1 & 3.2)
+  - Table 4: General s-Block Exponential Seesaw Exponents & Thresholds (Theorem 3.3)
+  - Table 5: Discrete Integer-Rigidity Minimax vs. Continuous Bound (Theorem 3.5)
+  - Table 6: Sturmian Attractor Rational Cyclic Inversion (Theorem 3.6)
 
 Author: Tornado Guy
 Date: October 2026
@@ -13,6 +15,7 @@ License: MIT
 
 import math
 import time
+from fractions import Fraction
 
 
 def reproduce_table_3():
@@ -87,8 +90,147 @@ def reproduce_table_4():
         print(f"{s:8d} | {-Cs:21.6f} | {base:21.6f} | {k0_str:>32}")
 
 
+def reproduce_table_5():
+    theta = math.log2(3.0)
+    print("\n" + "=" * 105)
+    print("TABLE 5: Discrete Integer-Rigidity Minimax vs Continuous Seesaw Bound (Theorem 3.5)")
+    print("=" * 105)
+    print(f"{'k':>2} | {'s':>2} | {'Continuous Bound s*2^(-Cs*k)':>29} | {'Discrete Integer Max':>21} | {'Tightening':>11} | {'Optimal Discrete rho'}")
+    print("-" * 105)
+    for k, S in [(17, 27), (29, 46), (41, 65)]:
+        E_total = S - k
+        for s in [2, 3, 4, 6, 8, E_total]:
+            c_s = (theta - 1.0) / ((theta ** s) - 1.0)
+            cont_bound = s * (2.0 ** (-c_s * k))
+
+            raw_geom = [theta ** m for m in range(s)]
+            rho_A = [max(1, int(round(k * x / sum(raw_geom)))) for x in raw_geom]
+            while sum(rho_A) > k:
+                idx = max(range(s), key=lambda i: rho_A[i])
+                rho_A[idx] -= 1
+            while sum(rho_A) < k:
+                rho_A[-1] += 1
+            beta_A = [1] * (s - 1) + [E_total - (s - 1)]
+
+            rho_B = [((m + 1) * k) // s - (m * k) // s for m in range(s)]
+            beta_B = [((m + 1) * E_total) // s - (m * E_total) // s for m in range(s)]
+
+            def eval_config(rhos, betas):
+                min_u = float('inf')
+                for m in range(s):
+                    suf = 0.0
+                    terms_sum = 0.0
+                    for j in range(s, 0, -1):
+                        if j < s:
+                            idx = (m + j) % s
+                            suf += (theta - 1.0) * rhos[idx] - betas[idx]
+                        b_curr = betas[(m + j - 1) % s]
+                        terms_sum += (2.0 ** suf) * (1.0 - 2.0 ** (-b_curr))
+                    u_r = (2.0 ** (-rhos[m])) * terms_sum
+                    if u_r < min_u:
+                        min_u = u_r
+                return min_u
+
+            best_val = 0.0
+            best_rho = None
+            for r_init, b_init in [(rho_A, beta_A), (rho_B, beta_B)]:
+                curr_r = list(r_init)
+                curr_b = list(b_init)
+                curr_v = eval_config(curr_r, curr_b)
+                improved = True
+                while improved:
+                    improved = False
+                    for i in range(s):
+                        if curr_r[i] <= 1:
+                            continue
+                        for j in range(s):
+                            if i == j:
+                                continue
+                            curr_r[i] -= 1
+                            curr_r[j] += 1
+                            v = eval_config(curr_r, curr_b)
+                            if v > curr_v + 1e-12:
+                                curr_v = v
+                                improved = True
+                                break
+                            curr_r[i] += 1
+                            curr_r[j] -= 1
+                        if improved:
+                            break
+                    for i in range(s):
+                        if curr_b[i] <= 1:
+                            continue
+                        for j in range(s):
+                            if i == j:
+                                continue
+                            curr_b[i] -= 1
+                            curr_b[j] += 1
+                            v = eval_config(curr_r, curr_b)
+                            if v > curr_v + 1e-12:
+                                curr_v = v
+                                improved = True
+                                break
+                            curr_b[i] += 1
+                            curr_b[j] -= 1
+                        if improved:
+                            break
+                if curr_v > best_val:
+                    best_val = curr_v
+                    best_rho = list(curr_r)
+
+            ratio = cont_bound / best_val if best_val > 0 else 0.0
+            rho_str = str(best_rho[:7]) + ("..." if len(best_rho) > 7 else "")
+            print(f"{k:2d} | {s:2d} | {cont_bound:29.6f} | {best_val:21.6f} | {ratio:10.2f}x | {rho_str}")
+
+
+def reproduce_table_6(max_s: int = 50):
+    print("\n" + "=" * 78)
+    print("TABLE 6: Sturmian Attractor Rational Cyclic Inversion (Theorem 3.6)")
+    print("=" * 78)
+    print(f"{'Blocks s':>8} | {'Sturmian Pattern rho':<25} | {'Exact Rational u_1':>20} | {'Numerator Bits':>16}")
+    print("-" * 78)
+    for s in range(5, max_s + 1, 5):
+        rhos = [2 if (i % 3 != 0) else 1 for i in range(s)]
+        mat = [[Fraction(0) for _ in range(s)] for _ in range(s)]
+        vec = [Fraction(1) for _ in range(s)]
+        for m in range(s):
+            mat[m][m] = -Fraction(3 ** rhos[m])
+            mat[m][(m + 1) % s] = Fraction(1 << (rhos[(m + 1) % s] + 1))
+
+        m_matrix = [row[:] for row in mat]
+        v_vec = list(vec)
+        for i in range(s):
+            pivot = i
+            while pivot < s and m_matrix[pivot][i] == 0:
+                pivot += 1
+            if pivot == s:
+                continue
+            m_matrix[i], m_matrix[pivot] = m_matrix[pivot], m_matrix[i]
+            v_vec[i], v_vec[pivot] = v_vec[pivot], v_vec[i]
+
+            fac = m_matrix[i][i]
+            for j in range(i, s):
+                m_matrix[i][j] /= fac
+            v_vec[i] /= fac
+
+            for r in range(s):
+                if r != i and m_matrix[r][i] != 0:
+                    factor = m_matrix[r][i]
+                    for j in range(i, s):
+                        m_matrix[r][j] -= factor * m_matrix[i][j]
+                    v_vec[r] -= factor * v_vec[i]
+
+        u_1 = v_vec[0]
+        u_1_float = float(u_1) if u_1 > 0 else 0.0
+        bits = u_1.numerator.bit_length() if u_1 > 0 else 0
+        rho_str = str(rhos[:6]) + ("..." if len(rhos) > 6 else "")
+        print(f"{s:8d} | {rho_str:<25} | {u_1_float:20.4f} | {bits:16d}")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     reproduce_table_3()
     reproduce_table_4()
-    print(f"\nBenchmark completed in {time.time() - t0:.3f} seconds.")
+    reproduce_table_5()
+    reproduce_table_6()
+    print(f"\nAll benchmark tables reproduced in {time.time() - t0:.3f} seconds.")
