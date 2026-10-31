@@ -12,6 +12,7 @@ Date: October 2026
 import math
 import time
 from fractions import Fraction
+from itertools import combinations
 from typing import List, Tuple, Dict, Set
 
 
@@ -28,6 +29,7 @@ class CollatzAdelicEngine:
       - Theorem 3.3: General s-Block Exponential Seesaw Theorem & Spitzer's Cyclic Lemma
       - Theorem 3.5: Discrete Integer-Rigidity Seesaw Theorem (10x to 17.65x Tightening)
       - Theorem 3.6: Sturmian Attractor & Rational Bidiagonal Saturation (u_1 in [5.75, 16.70])
+      - Theorem 3.7: Combinatorial Density Deficit & Sturmian 2-Adic Annihilation (u_1,2-adic ~ 2^{1.073 k})
     """
 
     @staticmethod
@@ -408,6 +410,109 @@ class CollatzAdelicEngine:
             print(f"{s:8d} | {rho_str:<25} | {u_1_float:20.4f} | {bits:16d}")
 
     @classmethod
+    def run_sturmian_density_annihilation(cls) -> None:
+        """
+        Generates Table 7: The Combinatorial Density Deficit and Sturmian 2-Adic Annihilation (Theorem 3.7).
+        Part 1: Canonical Sturmian words (all s cyclic shifts) up to k=306, S=485.
+        Part 2: Exhaustive scan across all C(S-k, 2k-S) words in {1, 2}^s up to k=41, S=65.
+        """
+        resonants = [
+            (5, 8), (12, 19), (17, 27), (22, 35), (29, 46),
+            (34, 54), (41, 65), (53, 84), (94, 149), (306, 485)
+        ]
+        print("\n=== COLLATZ TABLE 7 (Part 1): Canonical Sturmian Shifts vs. 2-Adic Scrambler (Theorem 3.7) ===")
+        print(f"{'k':>3} | {'S':>3} | {'s=S-k':>5} | {'Max u1_arch':>11} | {'Min u1_2adic':>22} | {'Bits of u1_2adic':>18} | {'Bit Fill Ratio'}")
+        print("-" * 98)
+
+        for k, S in resonants:
+            s = S - k
+            D = abs((1 << S) - (3 ** k))
+            rhos_base = [((m + 1) * k) // s - (m * k) // s for m in range(s)]
+
+            max_u_arch = 0.0
+            min_u_2adic = 1 << S
+            best_bits = (S, S)
+
+            for shift in range(s):
+                rhos = rhos_base[shift:] + rhos_base[:shift]
+                rho0 = rhos[0]
+                mod_bits = S - rho0
+                M2 = 1 << mod_bits
+                inv_neg3k = pow(-(3 ** k), -1, M2)
+
+                U1 = 0
+                r_tilde = k - rho0
+                r_plus_b_prefix = 0
+                for j in range(1, s + 1):
+                    if j > 1:
+                        r_tilde -= rhos[j - 1]
+                        r_plus_b_prefix += rhos[j - 1] + 1
+                    U1 += (3 ** r_tilde) << r_plus_b_prefix
+
+                u_arch = U1 / D
+                u_2adic = (U1 * inv_neg3k) & (M2 - 1)
+
+                if u_arch > max_u_arch:
+                    max_u_arch = u_arch
+                if u_2adic < min_u_2adic:
+                    min_u_2adic = u_2adic
+                    best_bits = (u_2adic.bit_length(), mod_bits)
+
+            b_len, m_bits = best_bits
+            u2_str = f"{min_u_2adic:,}" if min_u_2adic < 10**15 else f"~2^{min_u_2adic.bit_length()-1}"
+            print(f"{k:3d} | {S:3d} | {s:5d} | {max_u_arch:11.2f} | {u2_str:>22} | {b_len:7d} / {m_bits:<8d} | {100.0*b_len/m_bits:13.1f}%")
+
+        print("\n=== COLLATZ TABLE 7 (Part 2): Exhaustive Scan of ALL C(S-k, 2k-S) Words in {1,2}^s (Theorem 3.7) ===")
+        print(f"{'k':>2} | {'S':>2} | {'s':>2} | {'Count C(s,2k-S)':>15} | {'Expected Min n0':>18} | {'Actual Min n0_2adic':>20} | {'Min u1_2adic':>16} | {'Target u1_arch'}")
+        print("-" * 112)
+
+        for k, S in [(5, 8), (12, 19), (17, 27), (22, 35), (29, 46), (34, 54), (41, 65)]:
+            s = S - k
+            k2 = 2 * k - S
+            D = (1 << S) - (3 ** k)
+            M2 = 1 << S
+            c3_inv = [pow(-(3 ** (i + 1)), -1, M2) for i in range(k)]
+            pow3_k = [3 ** (k - 1 - i) for i in range(k)]
+
+            lut_c3 = [[c3_inv[m + c] << (2 * m + c + 1) for c in range(k2 + 1)] for m in range(s)]
+            lut_p3 = [[pow3_k[m + c] << (2 * m + c + 1) for c in range(k2 + 1)] for m in range(s)]
+
+            min_n0 = M2
+            min_u1 = M2
+            target_u1_arch = 0.0
+
+            rhos = [1] * s
+            for two_positions in combinations(range(s), k2):
+                for pos in two_positions:
+                    rhos[pos] = 2
+                rho0 = rhos[0]
+
+                c = 0
+                n0_plus_1_2adic = 0
+                sparse_arch_num = 0
+                for m in range(s):
+                    if rhos[m] == 2:
+                        c += 1
+                        rhos[m] = 1
+                    n0_plus_1_2adic += lut_c3[m][c]
+                    sparse_arch_num += lut_p3[m][c]
+
+                n0_plus_1_2adic &= (M2 - 1)
+                n0_2adic = (n0_plus_1_2adic - 1) & (M2 - 1)
+                u1_2adic = n0_plus_1_2adic >> rho0
+                u1_arch = sparse_arch_num / ((1 << rho0) * D)
+
+                if n0_2adic < min_n0:
+                    min_n0 = n0_2adic
+                if u1_2adic < min_u1:
+                    min_u1 = u1_2adic
+                    target_u1_arch = u1_arch
+
+            cnt = math.comb(s, k2)
+            exp_min = (1 << S) / (2.0 * cnt)
+            print(f"{k:2d} | {S:2d} | {s:2d} | {cnt:15,d} | {exp_min:18,.1f} | {min_n0:20,d} | {min_u1:16,d} | {target_u1_arch:14.2f}")
+
+    @classmethod
     def scan_exact_shift_adelic_duality(cls) -> None:
         configs = [(5, 8, 87), (12, 19, 6292), (17, 27, 17345), (22, 35, 57529), (29, 46, 100000), (41, 65, 100000)]
         print("\n=== COLLATZ ADELIC DUALITY: Exact-Shift (A_k = S) Duality & Layer-3 Prime Annihilation ===")
@@ -562,6 +667,7 @@ if __name__ == "__main__":
     CollatzAdelicEngine.generate_s_block_seesaw_table()
     CollatzAdelicEngine.generate_integer_rigidity_comparison_table()
     CollatzAdelicEngine.solve_sturmian_cyclic_system()
+    CollatzAdelicEngine.run_sturmian_density_annihilation()
     CollatzAdelicEngine.scan_exact_shift_adelic_duality()
     BealAdelicEngine.verify_hensel_carry_identity()
     BealAdelicEngine.run_joint_crt_regime1_scanner()
