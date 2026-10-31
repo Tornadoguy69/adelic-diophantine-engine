@@ -13,11 +13,12 @@ This repository contains the reference implementation and formal LaTeX manuscrip
 ## Repository Structure
 
 ```text
-├── adelic_diophantine_engine.py   # Standalone verification & sieve suite (Collatz + Beal)
-├── prove_no_2block_cycles.py      # Unconditional proof script ruling out 2-block cycles to infinity
-├── verify_s_block_theorems.py     # Standalone benchmark reproducing Tables 3, 4, 5, 6, and 7
-├── adelic_carry_obstructions.tex  # Formal AMS-LaTeX manuscript (11 Theorems, proofs, and tables)
-└── README.md                      # Documentation, theorems, and reproduction benchmarks
+├── adelic_diophantine_engine.py      # Standalone verification & sieve suite (Collatz + Beal)
+├── prove_no_2block_cycles.py         # Unconditional proof script ruling out 2-block cycles to infinity
+├── verify_s_block_theorems.py        # Standalone benchmark reproducing Tables 3, 4, 5, 6, and 7
+├── adelic_diophantine_visualizer.html # Interactive 3D WebGL / HTML5 Canvas phase-space visualizer
+├── adelic_carry_obstructions.tex     # Formal AMS-LaTeX manuscript (11 Theorems, proofs, and tables)
+└── README.md                         # Documentation, theorems, and reproduction benchmarks
 ```
 
 ---
@@ -168,6 +169,9 @@ python3 verify_s_block_theorems.py
 # 4. Compile the formal LaTeX paper
 pdflatex adelic_carry_obstructions.tex
 pdflatex adelic_carry_obstructions.tex
+
+# 5. Open the interactive 3D WebGL / HTML5 Canvas visualizer in any modern browser
+open adelic_diophantine_visualizer.html
 ```
 
 ---
