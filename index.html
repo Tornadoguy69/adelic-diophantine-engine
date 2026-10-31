@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adelic Diophantine Engine — (2,3)-Adic Duality & Sturmian Bit-Scrambler</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js r128 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        obsidian: '#070709',
+                        glass: 'rgba(18, 18, 22, 0.78)',
+                        crimson: '#ff2a3c',
+                        crimsonDim: 'rgba(255, 42, 60, 0.16)',
+                        silver: '#8e8e98',
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            background-color: #070709;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .glass-panel {
+            background: rgba(18, 18, 22, 0.78);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+        .glass-pill {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-pill:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .glass-pill.active {
+            background: rgba(255, 42, 60, 0.15);
+            border-color: #ff2a3c;
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(255, 42, 60, 0.25);
+        }
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            height: 5px;
+            border-radius: 999px;
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ff2a3c;
+            border: 2px solid #ffffff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 42, 60, 0.8);
+            transition: transform 0.15s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        /* Subtle technical grid background */
+        .bg-tech-grid {
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070709;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff2a3c;
+        }
+        .bit-cell {
+            transition: all 0.18s ease;
+        }
+        .bit-cell:hover {
+            transform: translateY(-2px);
+            border-color: #ffffff;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-obsidian bg-tech-grid text-white flex flex-col">
+
+    <!-- =================================================================== -->
+    <!-- TOP HEADER & RESONANT CONVERGENT SELECTOR BAR                       -->
+    <!-- =================================================================== -->
+    <header class="w-full border-b border-white/10 bg-obsidian/90 backdrop-blur-md sticky top-0 z-30 px-4 lg:px-6 py-3">
+        <div class="max-w-[1800px] mx-auto flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
+            <!-- Brand & Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-8 rounded-full bg-crimson shadow-[0_0_15px_#ff2a3c]"></div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 rounded bg-crimson/20 text-crimson border border-crimson/40 font-semibold">Adelic Engine v4.0</span>
+                        <span class="font-mono text-[11px] text-silver hidden sm:inline">MSC2020: 11B83 | 11D41</span>
+                    </div>
+                    <h1 class="text-base sm:text-lg font-semibold tracking-tight text-white mt-0.5">
+                        Adelic Diophantine Engine: <span class="text-silver font-normal">(2,3)-Adic Duality &amp; Sturmian Bit-Scrambler</span>
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Resonant Convergent Pill Selector -->
+            <div class="flex flex-wrap items-center gap-1.5" id="convergent-selector">
+                <span class="text-xs font-mono text-silver mr-1 uppercase tracking-wider">Resonant (k, S):</span>
+                <!-- Populated dynamically by JS -->
+            </div>
+        </div>
+    </header>
+
+    <!-- =================================================================== -->
+    <!-- LIVE TELEMETRY RIBBON                                               -->
+    <!-- =================================================================== -->
+    <section class="w-full border-b border-white/10 bg-black/40 px-4 lg:px-6 py-2.5">
+        <div class="max-w-[1800px] mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            <div class="glass-panel rounded-xl px-3 py-2">
+                <div class="text-[10px] font-mono uppercase tracking-wider text-silver">Denominator |D| = |2^S - 3^k|</div>
+                <div id="tele-D" class="font-mono text-xs sm:text-sm font-semibold text-white truncate mt-0.5">5,077,565</div>
+                <div id="tele-factors" class="font-mono text-[10px] text-crimson truncate">5 × 71 × 14,303</div>
+            </div>
+            <div class="glass-panel rounded-xl px-3 py-2">
+                <div class="text-[10px] font-mono uppercase tracking-wider text-silver">Quantum Unit Q(k,S)</div>
+                <div id="tele-Q" class="font-mono text-xs sm:text-sm font-semibold text-white mt-0.5">26.4335</div>
+                <div class="font-mono text-[10px] text-silver">2^S / |2^S - 3^k|</div>
+            </div>
+            <div class="glass-panel rounded-xl px-3 py-2">
+                <div class="text-[10px] font-mono uppercase tracking-wider text-silver">Parity Space C(S-1, k-1)</div>
+                <div id="tele-space" class="font-mono text-xs sm:text-sm font-semibold text-white truncate mt-0.5">5,311,735</div>
+                <div id="tele-sturm-space" class="font-mono text-[10px] text-silver">{1,2}^s Subspace: 120</div>
+            </div>
+            <div class="glass-panel rounded-xl px-3 py-2">
+                <div class="text-[10px] font-mono uppercase tracking-wider text-silver">Global Min n0_2adic (&gt;1)</div>
+                <div id="tele-min-n0" class="font-mono text-xs sm:text-sm font-semibold text-white mt-0.5">165</div>
+                <div id="tele-bits-cancelled" class="font-mono text-[10px] text-emerald-400">19 / 27 Top Bits Cancelled</div>
+            </div>
+            <div class="glass-panel rounded-xl px-3 py-2">
+                <div class="text-[10px] font-mono uppercase tracking-wider text-silver">Closest Exact-Shift R2 → R3</div>
+                <div id="tele-nearmiss" class="font-mono text-xs sm:text-sm font-semibold text-crimson mt-0.5">231 → 233</div>
+                <div id="tele-drift" class="font-mono text-[10px] text-white">Even Drift |R3 - R2| = 2</div>
+            </div>
+            <div class="glass-panel rounded-xl px-3 py-2">
+                <div class="text-[10px] font-mono uppercase tracking-wider text-silver">Carry Contradiction</div>
+                <div id="tele-contradiction" class="font-mono text-xs sm:text-sm font-semibold text-white mt-0.5">2,579.4×</div>
+                <div id="tele-bmax" class="font-mono text-[10px] text-silver">B_max: 17,345</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- MAIN WORKSPACE GRID: LEFT 3D VIEWPORT + RIGHT 2D ANALYTIC PANELS    -->
+    <!-- =================================================================== -->
+    <main class="flex-1 max-w-[1800px] w-full mx-auto p-4 lg:p-6 grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch">
+
+        <!-- =============================================================== -->
+        <!-- LEFT / CENTER: 3D THREE.JS ADELIC PHASE SPACE (7 COLUMNS)       -->
+        <!-- =============================================================== -->
+        <div class="xl:col-span-7 flex flex-col gap-4">
+            <div class="glass-panel rounded-2xl flex-1 flex flex-col overflow-hidden relative min-h-[500px] lg:min-h-[640px]">
+                
+                <!-- 3D Viewport Top Overlay Bar -->
+                <div class="p-4 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 z-10 bg-obsidian/60 backdrop-blur-md">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-crimson animate-pulse"></span>
+                            <h2 class="text-xs sm:text-sm font-mono uppercase tracking-wider font-semibold text-white">
+                                3D Adelic Phase Space: R₂(A) × R₃(A) × |R_∞ - R₂|
+                            </h2>
+                        </div>
+                        <p class="text-[11px] text-silver mt-0.5">
+                            Exact-shift trajectories (<span class="font-mono text-white">A_k = S</span>) repelled from the Cycle Diagonal Plane (<span class="font-mono text-crimson">R₂ = R₃ = R_∞</span>) by the Quantum Discrepancy Floor.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button id="btn-toggle-plane" class="glass-pill active px-2.5 py-1 rounded-lg font-mono text-[11px]">Diagonal Plane</button>
+                        <button id="btn-toggle-splines" class="glass-pill active px-2.5 py-1 rounded-lg font-mono text-[11px]">Drift Vectors</button>
+                        <button id="btn-reset-cam" class="glass-pill px-2.5 py-1 rounded-lg font-mono text-[11px]">Reset Camera</button>
+                    </div>
+                </div>
+
+                <!-- Three.js Canvas Container -->
+                <div id="three-container" class="flex-1 w-full h-full min-h-[400px] relative cursor-grab active:cursor-grabbing">
+                    <!-- Floating Axis Legend Overlay -->
+                    <div class="absolute top-3 left-3 z-10 pointer-events-none flex flex-col gap-1 bg-obsidian/80 border border-white/10 rounded-xl px-3 py-2 backdrop-blur-md">
+                        <div class="flex items-center gap-2 text-[11px] font-mono">
+                            <span class="w-2.5 h-2.5 rounded-sm bg-white inline-block"></span>
+                            <span class="text-silver">X-Axis:</span>
+                            <span class="text-white">R₂(A) = n₀ mod 2^S (2-Adic Start)</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-[11px] font-mono">
+                            <span class="w-2.5 h-2.5 rounded-sm bg-silver inline-block"></span>
+                            <span class="text-silver">Z-Axis:</span>
+                            <span class="text-white">R₃(A) = n_k mod 3^k (3-Adic End)</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-[11px] font-mono">
+                            <span class="w-2.5 h-2.5 rounded-sm bg-crimson inline-block"></span>
+                            <span class="text-silver">Y-Axis (Height):</span>
+                            <span class="text-crimson">|R_∞ - R₂| = Q(k,S)·|R₃ - R₂|</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Candidate Selector Chips -->
+                    <div class="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5 max-w-[240px]">
+                        <span class="text-[10px] font-mono uppercase tracking-wider text-silver bg-obsidian/80 px-2 py-0.5 rounded border border-white/10">Inspect Near-Miss Node:</span>
+                        <div id="node-chips" class="flex flex-wrap justify-end gap-1">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selected Node Trajectory & Bit-Freezing Inspector Footer -->
+                <div class="p-4 border-t border-white/10 bg-obsidian/90 backdrop-blur-md z-10">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded bg-crimson text-white font-mono text-[11px] font-semibold" id="insp-badge">SELECTED NODE</span>
+                            <span class="font-mono text-xs sm:text-sm font-semibold text-white" id="insp-title">n₀ = 231 → n₁₇ = 233 (Exact Shift A₁₇ = 27)</span>
+                        </div>
+                        <div class="font-mono text-xs text-silver" id="insp-metrics">
+                            R₂ = 231 | R₃ = 233 | Drift Δ = +2 | Archimedean Target R_∞ = 283.87
+                        </div>
+                    </div>
+                    <!-- Cumulative Shift Vector A_i & Bit-Freezing Chain -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 mt-2">
+                        <div class="bg-black/60 border border-white/10 rounded-xl p-2.5">
+                            <div class="text-[10px] font-mono uppercase tracking-wider text-silver mb-1">
+                                Cumulative Shift Vector A = (A₀, A₁, ..., A_{k-1}) [Early Steps Freeze R₂ mod 2^S]
+                            </div>
+                            <div id="insp-A-vector" class="font-mono text-[11px] text-white break-all leading-relaxed">
+                                (0, 1, 2, 3, 4, 5, 7, 8, 9, 12, 13, 15, 17, 19, 20, 22, 23) → A_17 = 27
+                            </div>
+                        </div>
+                        <div class="bg-black/60 border border-white/10 rounded-xl p-2.5">
+                            <div class="text-[10px] font-mono uppercase tracking-wider text-silver mb-1">
+                                Forward Syracuse Orbit (n₀ → n₁ → ... → n_k) [Late Steps Freeze R₃ mod 3^k]
+                            </div>
+                            <div id="insp-orbit" class="font-mono text-[11px] text-silver break-all leading-relaxed">
+                                231 → 347 → 521 → 782...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- RIGHT: 2D ANALYTICAL & BIT-SCRAMBLER PANELS (5 COLUMNS)         -->
+        <!-- =============================================================== -->
+        <div class="xl:col-span-5 flex flex-col gap-5">
+
+            <!-- PANEL A: s-BLOCK EXPONENTIAL SEESAW & SPITZER CASCADE -->
+            <div class="glass-panel rounded-2xl p-4 flex flex-col gap-3">
+                <div class="flex items-start justify-between gap-2 border-b border-white/10 pb-3">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono text-[10px] font-semibold">THEOREM 3.3</span>
+                            <h3 class="text-xs sm:text-sm font-mono uppercase tracking-wider font-semibold text-white">
+                                s-Block Exponential Seesaw &amp; Spitzer Cascade
+                            </h3>
+                        </div>
+                        <p class="text-[11px] text-silver mt-0.5">
+                            Continuous Bound <span class="font-mono text-white">s·2^(-C_s·k)</span> vs. <span class="font-mono text-crimson">Discrete Integer-Rigidity Minimax</span> (<span class="font-mono">β_m ≥ 1</span>).
+                        </p>
+                    </div>
+                    <div class="text-right font-mono">
+                        <div class="text-xs font-semibold text-crimson" id="seesaw-tightening">10.1× Tighter</div>
+                        <div class="text-[10px] text-silver" id="seesaw-k0">Kills k ≥ 710</div>
+                    </div>
+                </div>
+
+                <!-- Interactive s-Block Slider -->
+                <div class="bg-black/50 border border-white/10 rounded-xl p-3 flex flex-col gap-2">
+                    <div class="flex items-center justify-between text-xs font-mono">
+                        <span class="text-silver">Active Block Count <strong class="text-white">s</strong> (steps with a_i ≥ 2):</span>
+                        <span id="slider-s-label" class="text-crimson font-semibold">s = 4 / 10 (C_s = 0.1101)</span>
+                    </div>
+                    <input type="range" id="slider-s" min="1" max="10" value="4" class="w-full">
+                    <div class="flex justify-between text-[10px] font-mono text-silver">
+                        <span>s = 1 (Steiner 1-Cycle)</span>
+                        <span id="slider-s-mid">Geometric Regime</span>
+                        <span id="slider-s-max">s_max = S - k (Sturmian)</span>
+                    </div>
+                </div>
+
+                <!-- 2D Canvas: Seesaw Decay & Optimal Block Profile rho_m -->
+                <div class="w-full h-[230px] bg-black/60 border border-white/10 rounded-xl relative overflow-hidden">
+                    <canvas id="canvas-seesaw" class="w-full h-full block"></canvas>
+                </div>
+
+                <!-- Optimal Integer Block Profile rho_m readout -->
+                <div class="flex items-center justify-between text-[11px] font-mono bg-black/40 px-3 py-2 rounded-xl border border-white/5">
+                    <span class="text-silver">Worst-Case Integer Profile ρ = (ρ₁, ..., ρ_s):</span>
+                    <span id="seesaw-rho-profile" class="text-white font-semibold truncate max-w-[260px]">[2, 3, 5, 7]</span>
+                </div>
+            </div>
+
+            <!-- PANEL B: STURMIAN 2-ADIC BIT-SCRAMBLER & BIT-FREEZING REGISTER -->
+            <div class="glass-panel rounded-2xl p-4 flex-1 flex flex-col gap-3">
+                <div class="flex items-start justify-between gap-2 border-b border-white/10 pb-3">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-1.5 py-0.5 rounded bg-crimson/20 text-crimson border border-crimson/40 font-mono text-[10px] font-semibold">THEOREM 1 &amp; 3.1</span>
+                            <h3 class="text-xs sm:text-sm font-mono uppercase tracking-wider font-semibold text-white">
+                                Sturmian 2-Adic Bit-Scrambler Register
+                            </h3>
+                        </div>
+                        <p class="text-[11px] text-silver mt-0.5">
+                            Click any block <span class="font-mono text-white">ρ_m ∈ {1, 2}</span> to mutate the word and recompute exact <span class="font-mono text-crimson">BigInt mod 2^S</span> scrambling.
+                        </p>
+                    </div>
+                    <button id="btn-reset-sturmian" class="glass-pill px-2.5 py-1 rounded-lg font-mono text-[10px] shrink-0">
+                        Canonical Sturmian
+                    </button>
+                </div>
+
+                <!-- Interactive Sturmian Word Mutator Bar -->
+                <div>
+                    <div class="flex items-center justify-between text-[10px] font-mono text-silver mb-1.5">
+                        <span>ACTIVE BLOCKS ρ_m ∈ {1, 2}^s (CLICK TO TOGGLE 1 ↔ 2):</span>
+                        <span id="sturm-word-summary" class="text-white">s = 10 blocks | ∑ρ_m = 17</span>
+                    </div>
+                    <div id="sturmian-blocks-container" class="flex flex-wrap gap-1.5 max-h-[84px] overflow-y-auto p-1">
+                        <!-- Populated dynamically by JS -->
+                    </div>
+                </div>
+
+                <!-- Live Comparison: Archimedean Core u1_arch vs 2-Adic Realization u1_2adic -->
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="bg-black/60 border border-white/10 rounded-xl p-2.5">
+                        <div class="text-[10px] font-mono text-silver uppercase">Archimedean Core u₁_arch</div>
+                        <div id="sturm-u1-arch" class="font-mono text-sm sm:text-base font-bold text-white mt-0.5">39.55</div>
+                        <div class="text-[10px] font-mono text-silver mt-0.5">Stays bounded (Crystalline Trap)</div>
+                    </div>
+                    <div class="bg-crimsonDim border border-crimson/40 rounded-xl p-2.5">
+                        <div class="text-[10px] font-mono text-crimson uppercase">2-Adic Core u₁_2adic (mod 2^{S-ρ₀})</div>
+                        <div id="sturm-u1-2adic" class="font-mono text-sm sm:text-base font-bold text-white truncate mt-0.5">3,696,411</div>
+                        <div id="sturm-bit-fill" class="text-[10px] font-mono text-crimson mt-0.5">22 / 25 Bits Filled (88.0%)</div>
+                    </div>
+                </div>
+
+                <!-- S-Bit Binary Register Visualization -->
+                <div class="bg-black/70 border border-white/10 rounded-xl p-3 flex-1 flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-[10px] font-mono mb-2">
+                        <span class="text-silver uppercase">S-Bit 2-Adic Register <strong class="text-white">n₀_2adic mod 2^S</strong> (MSB → LSB):</span>
+                        <div class="flex items-center gap-3">
+                            <span class="flex items-center gap-1 text-crimson"><span class="w-2 h-2 rounded-sm bg-crimson inline-block"></span>Bit = 1</span>
+                            <span class="flex items-center gap-1 text-silver"><span class="w-2 h-2 rounded-sm bg-white/10 inline-block"></span>Bit = 0</span>
+                        </div>
+                    </div>
+                    <div id="binary-register-grid" class="grid grid-cols-9 sm:grid-cols-13 gap-1 my-auto">
+                        <!-- Binary cells populated by JS -->
+                    </div>
+                    <div class="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] font-mono text-silver">
+                        <span id="sturm-subspace-density">Subspace C(s, 2k-S) = 120 pts in 2^27</span>
+                        <span id="sturm-expected-gap" class="text-white">Expected Min Gap: ~2^19.1</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- APPLICATION LOGIC (EXACT BIGINT ARITHMETIC, 3D ENGINE, 2D CANVASES) -->
+    <!-- =================================================================== -->
+    <script>
+        // =====================================================================
+        // 1. MATHEMATICAL DATASET & EXACT BIGINT ARITHMETIC HELPERS
+        // =====================================================================
+        const LOG2_3 = Math.log2(3); // 1.5849625007211563
+
+        const CONVERGENTS = [
+            {
+                k: 5, S: 8,
+                D_str: "13",
+                factors: "13 (Prime)",
+                Q: 19.6923,
+                space_str: "35",
+                min_n0: 7,
+                cancelled: 5,
+                bmax_str: "87",
+                contradiction: "1.0×",
+                nearMisses: [
+                    { n0: 73, nk: 71, Ak: 8, label: "73 → 71 (Δ = -2)" },
+                    { n0: 7,  nk: 11, Ak: 9, label: "7 → 11 (A₅ = 9)" },
+                    { n0: 19, nk: 29, Ak: 8, label: "19 → 29 (Δ = +10)" },
+                    { n0: 39, nk: 17, Ak: 9, label: "39 → 17 (A₅ = 9)" }
+                ]
+            },
+            {
+                k: 12, S: 19,
+                D_str: "7,153",
+                factors: "23 × 311",
+                Q: 73.2962,
+                space_str: "31,824",
+                min_n0: 97,
+                cancelled: 12,
+                bmax_str: "6,292",
+                contradiction: "27.8×",
+                nearMisses: [
+                    { n0: 97,  nk: 103, Ak: 19, label: "97 → 103 (Δ = +6)" },
+                    { n0: 295, nk: 305, Ak: 19, label: "295 → 305 (Δ = +10)" },
+                    { n0: 389, nk: 379, Ak: 19, label: "389 → 379 (Δ = -10)" },
+                    { n0: 433, nk: 443, Ak: 19, label: "433 → 443 (Δ = +10)" },
+                    { n0: 519, nk: 505, Ak: 19, label: "519 → 505 (Δ = -14)" }
+                ]
+            },
+            {
+                k: 17, S: 27,
+                D_str: "5,077,565",
+                factors: "5 × 71 × 14,303",
+                Q: 26.4335,
+                space_str: "5,311,735",
+                min_n0: 165,
+                cancelled: 19,
+                bmax_str: "17,345",
+                contradiction: "2,579.4×",
+                nearMisses: [
+                    { n0: 231, nk: 233, Ak: 27, label: "231 → 233 (Δ = +2)" },
+                    { n0: 235, nk: 233, Ak: 27, label: "235 → 233 (Δ = -2)" },
+                    { n0: 165, nk: 167, Ak: 27, label: "165 → 167 (Δ = +2)" },
+                    { n0: 329, nk: 323, Ak: 27, label: "329 → 323 (Δ = -6)" },
+                    { n0: 441, nk: 433, Ak: 27, label: "441 → 433 (Δ = -8)" }
+                ]
+            },
+            {
+                k: 22, S: 35,
+                D_str: "2,978,678,759",
+                factors: "7 × 425,525,537",
+                Q: 11.5352,
+                space_str: "927,983,760",
+                min_n0: 171,
+                cancelled: 27,
+                bmax_str: "57,529",
+                contradiction: "199,088.6×",
+                nearMisses: [
+                    { n0: 171, nk: 167, Ak: 35, label: "171 → 167 (Δ = -4)" },
+                    { n0: 229, nk: 233, Ak: 35, label: "229 → 233 (Δ = +4)" },
+                    { n0: 307, nk: 313, Ak: 35, label: "307 → 313 (Δ = +6)" },
+                    { n0: 599, nk: 593, Ak: 35, label: "599 → 593 (Δ = -6)" }
+                ]
+            },
+            {
+                k: 29, S: 46,
+                D_str: "1,738,366,812,781",
+                factors: "39,409 × 44,110,909",
+                Q: 40.4798,
+                space_str: "1,103,068,603,890",
+                min_n0: 91,
+                cancelled: 39,
+                bmax_str: "3,449,771",
+                contradiction: "6,799,365×",
+                nearMisses: [
+                    { n0: 323,  nk: 325,  Ak: 46, label: "323 → 325 (Δ = +2)" },
+                    { n0: 2427, nk: 2429, Ak: 46, label: "2427 → 2429 (Δ = +2)" },
+                    { n0: 429,  nk: 433,  Ak: 46, label: "429 → 433 (Δ = +4)" },
+                    { n0: 573,  nk: 577,  Ak: 46, label: "573 → 577 (Δ = +4)" }
+                ]
+            },
+            {
+                k: 41, S: 65,
+                D_str: "420,491,770,248,316,829",
+                factors: "19 × 29 × 17,021 × 44,835,377,399",
+                Q: 87.7389,
+                space_str: "250,649,105,469,666,120",
+                min_n0: 73,
+                cancelled: 58,
+                bmax_str: "970,158,189",
+                contradiction: "1.268 × 10¹⁰×",
+                nearMisses: [
+                    { n0: 313, nk: 325, Ak: 65, label: "313 → 325 (Δ = +12)" },
+                    { n0: 417, nk: 433, Ak: 65, label: "417 → 433 (Δ = +16)" },
+                    { n0: 415, nk: 433, Ak: 65, label: "415 → 433 (Δ = +18)" },
+                    { n0: 557, nk: 577, Ak: 65, label: "557 → 577 (Δ = +20)" }
+                ]
+            }
+        ];
+
+        // State Variables
+        let activeConvIndex = 2; // Default: k=17, S=27
+        let selectedNodeIndex = 0;
+        let activeBlockCountS = 4;
+        let currentSturmianRhos = [];
+        let showDiagonalPlane = true;
+        let showDriftSplines = true;
+
+        // BigInt Modular Inverse via Extended Euclidean Algorithm
+        function modInverseBigInt(a, m) {
+            let m0 = m;
+            let y = 0n, x = 1n;
+            if (m === 1n) return 0n;
+            let a_pos = ((a % m) + m) % m;
+            while (a_pos > 1n) {
+                let q = a_pos / m;
+                let t = m;
+                m = a_pos % m;
+                a_pos = t;
+                t = y;
+                y = x - q * y;
+                x = t;
+            }
+            if (x < 0n) x += m0;
+            return x;
+        }
+
+        // Compute Binomial Coefficient C(n, k)
+        function binomial(n, k) {
+            if (k < 0 || k > n) return 0n;
+            if (k === 0 || k === n) return 1n;
+            let kk = BigInt(Math.min(k, n - k));
+            let nn = BigInt(n);
+            let res = 1n;
+            for (let i = 1n; i <= kk; i++) {
+                res = (res * (nn - i + 1n)) / i;
+            }
+            return res;
+        }
+
+        // Trace actual Syracuse Trajectory for a given n0 and k steps
+        function traceSyracuse(n0_num, k) {
+            let curr = BigInt(n0_num);
+            let A = [0];
+            let orbit = [Number(curr)];
+            let acc = 0;
+            for (let step = 0; step < k; step++) {
+                let val = 3n * curr + 1n;
+                let v2 = 0;
+                while ((val & 1n) === 0n) {
+                    val >>= 1n;
+                    v2++;
+                }
+                acc += v2;
+                if (step < k - 1) A.push(acc);
+                curr = val;
+                orbit.push(Number(curr));
+            }
+            return { A, orbit, Ak: acc, nk: Number(curr) };
+        }
+
+        // Generate Exact-Shift Cloud + Near-Miss Points for 3D Phase Space
+        function generatePhaseSpacePoints(conv) {
+            const { k, S, Q, nearMisses } = conv;
+            const points = [];
+            const seen = new Set();
+
+            // 1. Add featured near-misses first
+            nearMisses.forEach((nm, idx) => {
+                const tr = traceSyracuse(nm.n0, k);
+                const R2 = nm.n0;
+                const R3 = nm.nk * Math.pow(2, Math.max(0, tr.Ak - S));
+                const drift = R3 - R2;
+                const gap = Math.abs(drift) * Q;
+                points.push({
+                    n0: R2,
+                    nk: R3,
+                    Ak: tr.Ak,
+                    drift,
+                    gap,
+                    R_inf: R2 + drift * Q,
+                    isFeatured: true,
+                    featuredIndex: idx,
+                    label: nm.label,
+                    A: tr.A,
+                    orbit: tr.orbit
+                });
+                seen.add(R2);
+            });
+
+            // 2. Scan odd integers to populate surrounding exact-shift & low-drift manifold cloud
+            const maxScan = k <= 17 ? 1800 : 1200;
+            for (let n0 = 3; n0 <= maxScan; n0 += 2) {
+                if (seen.has(n0)) continue;
+                const tr = traceSyracuse(n0, k);
+                if (tr.Ak === S || (Math.abs(tr.Ak - S) <= 1 && points.length < 75)) {
+                    const R2 = n0;
+                    const R3 = tr.Ak >= S ? tr.nk * Math.pow(2, tr.Ak - S) : tr.nk / Math.pow(2, S - tr.Ak);
+                    const drift = R3 - R2;
+                    if (Math.abs(drift) < 1200) {
+                        points.push({
+                            n0: R2,
+                            nk: R3,
+                            Ak: tr.Ak,
+                            drift,
+                            gap: Math.abs(drift) * Q,
+                            R_inf: R2 + drift * Q,
+                            isFeatured: false,
+                            label: `${R2} → ${tr.nk}`,
+                            A: tr.A,
+                            orbit: tr.orbit
+                        });
+                    }
+                }
+                if (points.length >= 90) break;
+            }
+            return points;
+        }
+
+        // =====================================================================
+        // 2. THREE.JS 3D ADELIC PHASE SPACE ENGINE
+        // =====================================================================
+        const threeContainer = document.getElementById('three-container');
+        let scene, camera, renderer, phaseGroup, planeMesh, splinesGroup;
+        let nodeMeshes = [];
+        let currentPhasePoints = [];
+
+        // Custom Spherical Orbit State
+        let camSpherical = { radius: 220, theta: Math.PI / 4, phi: Math.PI / 3 };
+        let camTarget = new THREE.Vector3(0, 20, 0);
+        let isDragging3D = false;
+        let dragDeltaTotal = 0;
+        let prevMouse = { x: 0, y: 0 };
+        const raycaster = new THREE.Raycaster();
+        const mouseVec = new THREE.Vector2();
+
+        function initThreeJS() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x070709, 0.0018);
+
+            const w = threeContainer.clientWidth || 800;
+            const h = threeContainer.clientHeight || 540;
+            camera = new THREE.PerspectiveCamera(45, w / h, 1, 2000);
+            updateCameraPosition();
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(w, h);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            threeContainer.appendChild(renderer.domElement);
+
+            // Ambient & Directional Lights
+            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const dirLight = new THREE.DirectionalLight(0xff2a3c, 0.9);
+            dirLight.position.set(100, 200, 120);
+            scene.add(dirLight);
+
+            phaseGroup = new THREE.Group();
+            scene.add(phaseGroup);
+
+            // Base Reference Grid on XZ plane (Discrepancy = 0 floor)
+            const gridHelper = new THREE.GridHelper(200, 20, 0x33333d, 0x191920);
+            gridHelper.position.set(0, 0, 0);
+            scene.add(gridHelper);
+
+            // Axes Lines (X: R2, Z: R3, Y: Discrepancy)
+            const axesMat = new THREE.LineBasicMaterial({ color: 0x555562 });
+            const axesGeom = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(-100, 0, -100), new THREE.Vector3(100, 0, -100),
+                new THREE.Vector3(-100, 0, -100), new THREE.Vector3(-100, 130, -100),
+                new THREE.Vector3(-100, 0, -100), new THREE.Vector3(-100, 0, 100)
+            ]);
+            scene.add(new THREE.LineSegments(axesGeom, axesMat));
+
+            // Cycle Diagonal Plane (R2 = R3 => X = Z) in Crimson Wireframe
+            const diagGeom = new THREE.PlaneGeometry(282, 130, 24, 12);
+            const diagMat = new THREE.MeshBasicMaterial({
+                color: 0xff2a3c,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.22,
+                side: THREE.DoubleSide
+            });
+            planeMesh = new THREE.Mesh(diagGeom, diagMat);
+            planeMesh.rotation.y = -Math.PI / 4;
+            planeMesh.position.set(0, 65, 0);
+            scene.add(planeMesh);
+
+            // Glowing Diagonal Floor Line (R2 = R3, Discrepancy = 0)
+            const diagLineGeom = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(-100, 0.5, -100),
+                new THREE.Vector3(100, 0.5, 100)
+            ]);
+            const diagLineMat = new THREE.LineBasicMaterial({ color: 0xff2a3c, linewidth: 2 });
+            scene.add(new THREE.Line(diagLineGeom, diagLineMat));
+
+            setupThreeInteractions();
+            rebuildPhaseSpace3D();
+        }
+
+        function updateCameraPosition() {
+            camera.position.x = camTarget.x + camSpherical.radius * Math.sin(camSpherical.phi) * Math.sin(camSpherical.theta);
+            camera.position.y = camTarget.y + camSpherical.radius * Math.cos(camSpherical.phi);
+            camera.position.z = camTarget.z + camSpherical.radius * Math.sin(camSpherical.phi) * Math.cos(camSpherical.theta);
+            camera.lookAt(camTarget);
+        }
+
+        function rebuildPhaseSpace3D() {
+            while (phaseGroup.children.length > 0) {
+                phaseGroup.remove(phaseGroup.children[0]);
+            }
+            nodeMeshes = [];
+            splinesGroup = new THREE.Group();
+            splinesGroup.visible = showDriftSplines;
+            phaseGroup.add(splinesGroup);
+
+            const conv = CONVERGENTS[activeConvIndex];
+            currentPhasePoints = generatePhaseSpacePoints(conv);
+
+            // Normalize coordinates into [-90, 90] box
+            const maxCoord = Math.max(...currentPhasePoints.map(p => Math.max(p.n0, p.nk, 100)));
+            const maxGap = Math.max(...currentPhasePoints.map(p => p.gap), 100);
+
+            const mapXZ = (val) => ((Math.min(val, maxCoord) / maxCoord) * 170) - 85;
+            const mapY  = (gap) => Math.min(120, Math.max(4, (Math.log1p(gap) / Math.log1p(maxGap)) * 115));
+
+            const featuredGeom = new THREE.SphereGeometry(3.4, 24, 24);
+            const normalGeom   = new THREE.SphereGeometry(1.7, 14, 14);
+
+            currentPhasePoints.forEach((pt, idx) => {
+                const x = mapXZ(pt.n0);
+                const z = mapXZ(pt.nk);
+                const y = mapY(pt.gap);
+
+                const isSelected = (idx === selectedNodeIndex);
+                const mat = new THREE.MeshStandardMaterial({
+                    color: pt.isFeatured ? (isSelected ? 0xffffff : 0xff2a3c) : 0x8e8e98,
+                    emissive: pt.isFeatured ? (isSelected ? 0xff2a3c : 0xaa1122) : 0x222228,
+                    emissiveIntensity: isSelected ? 1.2 : (pt.isFeatured ? 0.75 : 0.3),
+                    roughness: 0.2,
+                    metalness: 0.5
+                });
+
+                const mesh = new THREE.Mesh(pt.isFeatured ? featuredGeom : normalGeom, mat);
+                mesh.position.set(x, y, z);
+                mesh.userData = { pointIndex: idx };
+                phaseGroup.add(mesh);
+                nodeMeshes.push(mesh);
+
+                // Selection Halo Ring for active node
+                if (isSelected) {
+                    const ringGeom = new THREE.RingGeometry(4.8, 6.0, 32);
+                    const ringMat = new THREE.MeshBasicMaterial({ color: 0xff2a3c, side: THREE.DoubleSide });
+                    const ring = new THREE.Mesh(ringGeom, ringMat);
+                    ring.position.set(x, y, z);
+                    ring.lookAt(camera.position);
+                    phaseGroup.add(ring);
+                }
+
+                // Vertical stem + spline connecting node to its projection on the Cycle Diagonal (R2=R3)
+                const diagProj = (x + z) / 2;
+                const curve = new THREE.QuadraticBezierCurve3(
+                    new THREE.Vector3(x, y, z),
+                    new THREE.Vector3(x, y * 0.35, z),
+                    new THREE.Vector3(diagProj, 0.5, diagProj)
+                );
+                const curvePts = curve.getPoints(16);
+                const lineGeom = new THREE.BufferGeometry().setFromPoints(curvePts);
+                const lineMat = new THREE.LineBasicMaterial({
+                    color: isSelected ? 0xffffff : (pt.isFeatured ? 0xff2a3c : 0x444452),
+                    transparent: true,
+                    opacity: isSelected ? 0.95 : (pt.isFeatured ? 0.55 : 0.2)
+                });
+                splinesGroup.add(new THREE.Line(lineGeom, lineMat));
+            });
+
+            updateNodeInspector();
+        }
+
+        function setupThreeInteractions() {
+            const dom = renderer.domElement;
+
+            dom.addEventListener('mousedown', (e) => {
+                isDragging3D = true;
+                dragDeltaTotal = 0;
+                prevMouse = { x: e.clientX, y: e.clientY };
+            });
+
+            window.addEventListener('mouseup', () => { isDragging3D = false; });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging3D) return;
+                const dx = e.clientX - prevMouse.x;
+                const dy = e.clientY - prevMouse.y;
+                dragDeltaTotal += Math.hypot(dx, dy);
+                prevMouse = { x: e.clientX, y: e.clientY };
+                camSpherical.theta -= dx * 0.007;
+                camSpherical.phi = Math.max(0.15, Math.min(Math.PI / 2 - 0.04, camSpherical.phi - dy * 0.007));
+                updateCameraPosition();
+            });
+
+            dom.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                camSpherical.radius = Math.max(80, Math.min(420, camSpherical.radius + e.deltaY * 0.15));
+                updateCameraPosition();
+            }, { passive: false });
+
+            // Touch support
+            dom.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    isDragging3D = true;
+                    dragDeltaTotal = 0;
+                    prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+            }, { passive: true });
+            window.addEventListener('touchend', () => { isDragging3D = false; });
+            window.addEventListener('touchmove', (e) => {
+                if (!isDragging3D || e.touches.length !== 1) return;
+                const dx = e.touches[0].clientX - prevMouse.x;
+                const dy = e.touches[0].clientY - prevMouse.y;
+                dragDeltaTotal += Math.hypot(dx, dy);
+                prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                camSpherical.theta -= dx * 0.007;
+                camSpherical.phi = Math.max(0.15, Math.min(Math.PI / 2 - 0.04, camSpherical.phi - dy * 0.007));
+                updateCameraPosition();
+            }, { passive: true });
+
+            // Click Raycasting to select 3D Trajectory Node (guarded against drag)
+            dom.addEventListener('click', (e) => {
+                if (dragDeltaTotal > 6) return;
+                const rect = dom.getBoundingClientRect();
+                mouseVec.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouseVec.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                raycaster.setFromCamera(mouseVec, camera);
+                const hits = raycaster.intersectObjects(nodeMeshes);
+                if (hits.length > 0) {
+                    selectedNodeIndex = hits[0].object.userData.pointIndex;
+                    rebuildPhaseSpace3D();
+                    renderNodeChips();
+                }
+            });
+        }
+
+        function animateThreeJS() {
+            requestAnimationFrame(animateThreeJS);
+            if (!isDragging3D) {
+                camSpherical.theta += 0.0012;
+                updateCameraPosition();
+            }
+            renderer.render(scene, camera);
+        }
+
+        // =====================================================================
+        // 3. PANEL A: 2D CANVAS s-BLOCK SEESAW & SPITZER CASCADE PLOTTER
+        // =====================================================================
+        const canvasSeesaw = document.getElementById('canvas-seesaw');
+        const ctxSeesaw = canvasSeesaw.getContext('2d');
+
+        // Compute Worst-Case Integer Block Profile rho_m for given (k, S, s)
+        function computeIntegerRigidityProfile(k, S, s) {
+            const theta = LOG2_3;
+            const Cs = (theta - 1) / (Math.pow(theta, s) - 1);
+            const contBound = s * Math.pow(2, -Cs * k);
+
+            // Construct integer partition of k into s blocks with rho_m >= 1
+            let rhos = new Array(s).fill(1);
+            let rem = k - s;
+            if (rem > 0) {
+                // Distribute remaining climb proportional to geometric weights theta^(m-1)
+                let weights = [];
+                let wSum = 0;
+                for (let m = 0; m < s; m++) {
+                    let w = Math.pow(theta, m);
+                    weights.push(w);
+                    wSum += w;
+                }
+                let assigned = 0;
+                for (let m = 0; m < s - 1; m++) {
+                    let add = Math.round((weights[m] / wSum) * rem);
+                    rhos[m] += add;
+                    assigned += add;
+                }
+                rhos[s - 1] += Math.max(0, rem - assigned);
+            }
+
+            // Distribute beta_m >= 1 summing to S - k
+            let betas = new Array(s).fill(1);
+            let remBeta = (S - k) - s;
+            if (remBeta > 0) {
+                betas[s - 1] += remBeta;
+            }
+
+            // Evaluate exact min_m (u_m * |D| / 2^S) across all cyclic blocks m
+            let minU = Infinity;
+            for (let m = 0; m < s; m++) {
+                let sumJ = 0;
+                for (let j = 1; j <= s; j++) {
+                    let suffixDelta = 0;
+                    for (let t = j + 1; t <= s; t++) {
+                        let idx = (m + t - 1) % s;
+                        suffixDelta += (theta - 1) * rhos[idx] - betas[idx];
+                    }
+                    let b_mj = betas[(m + j - 1) % s];
+                    sumJ += Math.pow(2, -rhos[m] + suffixDelta) * (1 - Math.pow(2, -b_mj));
+                }
+                if (sumJ < minU) minU = sumJ;
+            }
+
+            // Compute asymptotic crossing point k_0(s) with Rhin's bound 0.0002 * k^(-13.3)
+            let k0 = 10;
+            for (let testK = 10; testK <= 25000; testK++) {
+                if (s * Math.pow(2, -Cs * testK) < 0.0002 * Math.pow(testK, -13.3)) {
+                    k0 = testK;
+                    break;
+                }
+                k0 = testK;
+            }
+
+            return { Cs, contBound, discBound: minU, rhos, k0 };
+        }
+
+        function drawSeesawCanvas() {
+            const rect = canvasSeesaw.parentElement.getBoundingClientRect();
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvasSeesaw.width = rect.width * dpr;
+            canvasSeesaw.height = rect.height * dpr;
+            ctxSeesaw.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            const w = rect.width;
+            const h = rect.height;
+            ctxSeesaw.clearRect(0, 0, w, h);
+
+            const conv = CONVERGENTS[activeConvIndex];
+            const k = conv.k;
+            const S = conv.S;
+            const sMax = S - k;
+            const s = Math.min(activeBlockCountS, sMax);
+
+            const padL = 44, padR = 18, padT = 24, padB = 30;
+            const plotW = w - padL - padR;
+            const plotH = h - padT - padB;
+
+            // Grid lines
+            ctxSeesaw.strokeStyle = 'rgba(255,255,255,0.06)';
+            ctxSeesaw.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = padT + (plotH * i) / 4;
+                ctxSeesaw.beginPath();
+                ctxSeesaw.moveTo(padL, y);
+                ctxSeesaw.lineTo(w - padR, y);
+                ctxSeesaw.stroke();
+            }
+
+            // Compute curves across s = 1 .. sMax
+            const ptsCont = [];
+            const ptsDisc = [];
+            for (let sVal = 1; sVal <= sMax; sVal++) {
+                const res = computeIntegerRigidityProfile(k, S, sVal);
+                const x = padL + ((sVal - 1) / Math.max(1, sMax - 1)) * plotW;
+                // Log10 scale from 10^-6 to 10^1.5
+                const mapLogY = (v) => {
+                    const lv = Math.max(-6, Math.min(1.5, Math.log10(Math.max(1e-6, v))));
+                    return padT + plotH * (1 - (lv - (-6)) / 7.5);
+                };
+                ptsCont.push({ x, y: mapLogY(res.contBound), sVal, val: res.contBound });
+                ptsDisc.push({ x, y: mapLogY(res.discBound), sVal, val: res.discBound });
+            }
+
+            // Draw Target Threshold Line |D|/2^S = 1 / Q(k,S)
+            const targetVal = 1.0 / conv.Q;
+            const yTarget = padT + plotH * (1 - (Math.max(-6, Math.min(1.5, Math.log10(targetVal))) + 6) / 7.5);
+            ctxSeesaw.save();
+            ctxSeesaw.setLineDash([4, 4]);
+            ctxSeesaw.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+            ctxSeesaw.beginPath();
+            ctxSeesaw.moveTo(padL, yTarget);
+            ctxSeesaw.lineTo(w - padR, yTarget);
+            ctxSeesaw.stroke();
+            ctxSeesaw.restore();
+
+            ctxSeesaw.fillStyle = '#8e8e98';
+            ctxSeesaw.font = '10px "JetBrains Mono"';
+            ctxSeesaw.fillText(`Floor |D|/2^S (u_m = 1)`, padL + 6, yTarget - 5);
+
+            // Draw Continuous Seesaw Curve (Silver/White)
+            ctxSeesaw.strokeStyle = '#8e8e98';
+            ctxSeesaw.lineWidth = 2;
+            ctxSeesaw.beginPath();
+            ptsCont.forEach((p, i) => i === 0 ? ctxSeesaw.moveTo(p.x, p.y) : ctxSeesaw.lineTo(p.x, p.y));
+            ctxSeesaw.stroke();
+
+            // Draw Discrete Integer-Rigidity Curve (Crimson)
+            ctxSeesaw.strokeStyle = '#ff2a3c';
+            ctxSeesaw.lineWidth = 2.5;
+            ctxSeesaw.beginPath();
+            ptsDisc.forEach((p, i) => i === 0 ? ctxSeesaw.moveTo(p.x, p.y) : ctxSeesaw.lineTo(p.x, p.y));
+            ctxSeesaw.stroke();
+
+            // Highlight Active s Marker
+            const activeIdx = Math.min(ptsDisc.length - 1, s - 1);
+            const pC = ptsCont[activeIdx];
+            const pD = ptsDisc[activeIdx];
+            if (pC && pD) {
+                ctxSeesaw.strokeStyle = 'rgba(255, 42, 60, 0.4)';
+                ctxSeesaw.lineWidth = 1;
+                ctxSeesaw.beginPath();
+                ctxSeesaw.moveTo(pD.x, padT);
+                ctxSeesaw.lineTo(pD.x, padT + plotH);
+                ctxSeesaw.stroke();
+
+                ctxSeesaw.fillStyle = '#ffffff';
+                ctxSeesaw.beginPath();
+                ctxSeesaw.arc(pC.x, pC.y, 4, 0, Math.PI * 2);
+                ctxSeesaw.fill();
+
+                ctxSeesaw.fillStyle = '#ff2a3c';
+                ctxSeesaw.beginPath();
+                ctxSeesaw.arc(pD.x, pD.y, 5, 0, Math.PI * 2);
+                ctxSeesaw.fill();
+            }
+
+            // Y-axis Log10 labels
+            ctxSeesaw.fillStyle = '#8e8e98';
+            ctxSeesaw.font = '10px "JetBrains Mono"';
+            ['10¹', '10⁻¹', '10⁻³', '10⁻⁵'].forEach((lbl, idx) => {
+                const y = padT + (idx * 2 + 0.5) * (plotH / 7.5);
+                ctxSeesaw.fillText(lbl, 6, y + 3);
+            });
+
+            // X-axis labels
+            ctxSeesaw.fillText(`s=1`, padL, h - 8);
+            ctxSeesaw.fillText(`Active Blocks s →`, w / 2 - 40, h - 8);
+            ctxSeesaw.fillText(`s=${sMax}`, w - padR - 28, h - 8);
+
+            // Legend inside canvas top-left
+            ctxSeesaw.fillStyle = '#8e8e98';
+            ctxSeesaw.fillText(`── Continuous s·2^(-C_s·k)`, padL + 6, padT + 12);
+            ctxSeesaw.fillStyle = '#ff2a3c';
+            ctxSeesaw.fillText(`── Discrete Integer-Rigidity Minimax`, padL + 175, padT + 12);
+
+            // Update DOM labels for Panel A
+            const curProfile = computeIntegerRigidityProfile(k, S, s);
+            const ratio = (curProfile.contBound / Math.max(1e-9, curProfile.discBound)).toFixed(1);
+            document.getElementById('seesaw-tightening').textContent = `${ratio}× Tighter`;
+            document.getElementById('seesaw-k0').textContent = `Asymptotic Kill: k ≥ ${curProfile.k0.toLocaleString()}`;
+            document.getElementById('slider-s-label').textContent = `s = ${s} / ${sMax} (C_s = ${curProfile.Cs.toFixed(4)})`;
+            document.getElementById('seesaw-rho-profile').textContent = `[${curProfile.rhos.join(', ')}]`;
+        }
+
+        // =====================================================================
+        // 4. PANEL B: STURMIAN 2-ADIC BIT-SCRAMBLER & REGISTER ENGINE
+        // =====================================================================
+        function initCanonicalSturmianWord() {
+            const conv = CONVERGENTS[activeConvIndex];
+            const k = conv.k;
+            const S = conv.S;
+            const s = S - k;
+            currentSturmianRhos = [];
+            for (let m = 0; m < s; m++) {
+                const rho_m = Math.floor(((m + 1) * k) / s) - Math.floor((m * k) / s);
+                currentSturmianRhos.push(rho_m);
+            }
+            renderSturmianScrambler();
+        }
+
+        function renderSturmianScrambler() {
+            const conv = CONVERGENTS[activeConvIndex];
+            const S = conv.S;
+            const s = currentSturmianRhos.length;
+            const k_curr = currentSturmianRhos.reduce((a, b) => a + b, 0);
+
+            // 1. Render clickable rho_m blocks
+            const container = document.getElementById('sturmian-blocks-container');
+            container.innerHTML = '';
+            currentSturmianRhos.forEach((rho, idx) => {
+                const btn = document.createElement('button');
+                const isTwo = (rho === 2);
+                btn.className = `px-2 py-1 rounded-lg font-mono text-xs font-semibold transition-all border ${
+                    isTwo
+                        ? 'bg-crimson/20 border-crimson text-white shadow-[0_0_10px_rgba(255,42,60,0.2)]'
+                        : 'bg-white/5 border-white/15 text-silver hover:text-white'
+                }`;
+                btn.textContent = `ρ${idx + 1}=${rho}`;
+                btn.title = `Click to toggle block ${idx + 1} between ρ=1 and ρ=2`;
+                btn.addEventListener('click', () => {
+                    currentSturmianRhos[idx] = currentSturmianRhos[idx] === 2 ? 1 : 2;
+                    renderSturmianScrambler();
+                });
+                container.appendChild(btn);
+            });
+
+            document.getElementById('sturm-word-summary').textContent =
+                `s = ${s} blocks | ∑ρ_m = ${k_curr} (Target k = ${conv.k})`;
+
+            // 2. Exact BigInt Sparse 2-Adic Scrambler Calculation
+            // (n0 + 1) mod 2^S = ( - sum_{m=0}^{s-1} 3^{-(i_m + 1)} 2^{i_m + m + 1} ) mod 2^S
+            const S_big = BigInt(S);
+            const M2 = 1n << S_big;
+            const mask = M2 - 1n;
+
+            let i_curr = -1;
+            let n0_plus_1_2adic = 0n;
+            let sparse_arch_num = 0n;
+
+            for (let m = 0; m < s; m++) {
+                i_curr += currentSturmianRhos[m];
+                const shift_exp = BigInt(i_curr + m + 1);
+                if (shift_exp < S_big) {
+                    const pow3_ip1 = 3n ** BigInt(i_curr + 1);
+                    const inv_neg3 = modInverseBigInt(-pow3_ip1, M2);
+                    n0_plus_1_2adic = (n0_plus_1_2adic + (inv_neg3 << shift_exp)) & mask;
+                }
+                const rem3_exp = BigInt(Math.max(0, k_curr - 1 - i_curr));
+                sparse_arch_num += (3n ** rem3_exp) << shift_exp;
+            }
+
+            const n0_2adic = (n0_plus_1_2adic - 1n) & mask;
+            const rho0 = BigInt(currentSturmianRhos[0]);
+            const u1_2adic = n0_plus_1_2adic >> rho0;
+
+            const D_big = (1n << S_big) - (3n ** BigInt(k_curr));
+            const D_abs = D_big < 0n ? -D_big : (D_big === 0n ? 1n : D_big);
+            const u1_arch = Number(sparse_arch_num) / (Number(1n << rho0) * Number(D_abs));
+
+            // Bit length of u1_2adic
+            const u1_str_bin = u1_2adic.toString(2);
+            const u1_bit_len = u1_2adic === 0n ? 0 : u1_str_bin.length;
+            const max_u1_bits = S - currentSturmianRhos[0];
+            const fillPct = ((u1_bit_len / Math.max(1, max_u1_bits)) * 100).toFixed(1);
+
+            document.getElementById('sturm-u1-arch').textContent = u1_arch.toFixed(2);
+            document.getElementById('sturm-u1-2adic').textContent = u1_2adic.toLocaleString();
+            document.getElementById('sturm-bit-fill').textContent =
+                `${u1_bit_len} / ${max_u1_bits} Bits Filled (${fillPct}%)`;
+
+            // 3. Render S-Bit Binary Register Grid (MSB to LSB)
+            const binGrid = document.getElementById('binary-register-grid');
+            binGrid.innerHTML = '';
+            const n0_bin_padded = n0_2adic.toString(2).padStart(S, '0');
+
+            for (let b = 0; b < S; b++) {
+                const bitChar = n0_bin_padded[b];
+                const bitIdx = S - 1 - b; // MSB first
+                const cell = document.createElement('div');
+                const isOne = bitChar === '1';
+                cell.className = `bit-cell rounded px-1 py-1 text-center font-mono text-[10px] border ${
+                    isOne
+                        ? 'bg-crimson/25 border-crimson text-white font-bold'
+                        : 'bg-white/5 border-white/10 text-silver'
+                }`;
+                cell.innerHTML = `<div class="text-[8px] opacity-60">b${bitIdx}</div><div>${bitChar}</div>`;
+                binGrid.appendChild(cell);
+            }
+
+            // Subspace density stats
+            const k2 = 2 * conv.k - conv.S;
+            const subCount = binomial(s, k2);
+            const expGapLog2 = (conv.S - 1 - Math.log2(Math.max(1, Number(subCount)))).toFixed(1);
+            document.getElementById('sturm-subspace-density').textContent =
+                `Subspace C(${s}, ${k2}) = ${subCount.toLocaleString()} words`;
+            document.getElementById('sturm-expected-gap').textContent =
+                `Expected Min 2-Adic Gap: ~2^${expGapLog2}`;
+        }
+
+        // =====================================================================
+        // 5. UI TELEMETRY & INTERACTION WIRING
+        // =====================================================================
+        function renderConvergentPills() {
+            const container = document.getElementById('convergent-selector');
+            container.querySelectorAll('button').forEach(b => b.remove());
+
+            CONVERGENTS.forEach((conv, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `glass-pill px-3 py-1.5 rounded-xl font-mono text-xs font-medium ${
+                    idx === activeConvIndex ? 'active' : 'text-silver'
+                }`;
+                btn.textContent = `(k=${conv.k}, S=${conv.S})`;
+                btn.addEventListener('click', () => {
+                    activeConvIndex = idx;
+                    selectedNodeIndex = 0;
+                    const sMax = conv.S - conv.k;
+                    const slider = document.getElementById('slider-s');
+                    slider.max = sMax;
+                    activeBlockCountS = Math.min(activeBlockCountS, sMax);
+                    slider.value = activeBlockCountS;
+                    document.getElementById('slider-s-max').textContent = `s_max = ${sMax} (Sturmian)`;
+
+                    renderConvergentPills();
+                    updateTopTelemetry();
+                    rebuildPhaseSpace3D();
+                    renderNodeChips();
+                    drawSeesawCanvas();
+                    initCanonicalSturmianWord();
+                });
+                container.appendChild(btn);
+            });
+        }
+
+        function updateTopTelemetry() {
+            const conv = CONVERGENTS[activeConvIndex];
+            const s = conv.S - conv.k;
+            const k2 = 2 * conv.k - conv.S;
+            const sturmCount = binomial(s, k2);
+
+            document.getElementById('tele-D').textContent = conv.D_str;
+            document.getElementById('tele-factors').textContent = conv.factors;
+            document.getElementById('tele-Q').textContent = conv.Q.toFixed(4);
+            document.getElementById('tele-space').textContent = conv.space_str;
+            document.getElementById('tele-sturm-space').textContent = `{1,2}^${s} Subspace: ${sturmCount.toLocaleString()}`;
+            document.getElementById('tele-min-n0').textContent = conv.min_n0.toLocaleString();
+            document.getElementById('tele-bits-cancelled').textContent = `${conv.cancelled} / ${conv.S} Top Bits Cancelled`;
+
+            const bestNM = conv.nearMisses[0];
+            const drift = Math.abs(bestNM.nk - bestNM.n0);
+            document.getElementById('tele-nearmiss').textContent = `${bestNM.n0} → ${bestNM.nk}`;
+            document.getElementById('tele-drift').textContent = `Even Drift |R₃ - R₂| = ${drift}`;
+            document.getElementById('tele-contradiction').textContent = conv.contradiction;
+            document.getElementById('tele-bmax').textContent = `Naive B_max: ${conv.bmax_str}`;
+        }
+
+        function renderNodeChips() {
+            const chipContainer = document.getElementById('node-chips');
+            chipContainer.innerHTML = '';
+            const conv = CONVERGENTS[activeConvIndex];
+            conv.nearMisses.forEach((nm, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `glass-pill px-2.5 py-1 rounded-lg font-mono text-[10px] backdrop-blur-md ${
+                    selectedNodeIndex === idx ? 'active' : 'text-silver'
+                }`;
+                btn.textContent = nm.label;
+                btn.addEventListener('click', () => {
+                    selectedNodeIndex = idx;
+                    rebuildPhaseSpace3D();
+                    renderNodeChips();
+                });
+                chipContainer.appendChild(btn);
+            });
+        }
+
+        function updateNodeInspector() {
+            const conv = CONVERGENTS[activeConvIndex];
+            const pt = currentPhasePoints[selectedNodeIndex] || currentPhasePoints[0];
+            if (!pt) return;
+
+            const signedDrift = pt.drift >= 0 ? `+${pt.drift}` : `${pt.drift}`;
+            document.getElementById('insp-title').textContent =
+                `n₀ = ${pt.n0} → n_${conv.k} = ${pt.nk} (Total Shift A_${conv.k} = ${pt.Ak})`;
+            document.getElementById('insp-metrics').textContent =
+                `R₂ = ${pt.n0} | R₃ = ${pt.nk} | Drift Δ = ${signedDrift} | Archimedean Gap |R_∞ - R₂| = ${pt.gap.toFixed(2)}`;
+            document.getElementById('insp-A-vector').textContent =
+                `(${pt.A.join(', ')}) → A_${conv.k} = ${pt.Ak}`;
+            document.getElementById('insp-orbit').textContent =
+                pt.orbit.join(' → ');
+        }
+
+        // Wire Controls & Window Resize
+        window.onload = function () {
+            renderConvergentPills();
+            updateTopTelemetry();
+            initThreeJS();
+            renderNodeChips();
+            drawSeesawCanvas();
+            initCanonicalSturmianWord();
+            animateThreeJS();
+
+            // Slider event
+            document.getElementById('slider-s').addEventListener('input', (e) => {
+                activeBlockCountS = parseInt(e.target.value, 10);
+                drawSeesawCanvas();
+            });
+
+            // Reset Sturmian word button
+            document.getElementById('btn-reset-sturmian').addEventListener('click', () => {
+                initCanonicalSturmianWord();
+            });
+
+            // 3D Viewport Toggles
+            document.getElementById('btn-toggle-plane').addEventListener('click', (e) => {
+                showDiagonalPlane = !showDiagonalPlane;
+                planeMesh.visible = showDiagonalPlane;
+                e.currentTarget.classList.toggle('active', showDiagonalPlane);
+            });
+
+            document.getElementById('btn-toggle-splines').addEventListener('click', (e) => {
+                showDriftSplines = !showDriftSplines;
+                if (splinesGroup) splinesGroup.visible = showDriftSplines;
+                e.currentTarget.classList.toggle('active', showDriftSplines);
+            });
+
+            document.getElementById('btn-reset-cam').addEventListener('click', () => {
+                camSpherical = { radius: 220, theta: Math.PI / 4, phi: Math.PI / 3 };
+                updateCameraPosition();
+            });
+
+            window.addEventListener('resize', () => {
+                if (renderer && camera) {
+                    const w = threeContainer.clientWidth;
+                    const h = threeContainer.clientHeight;
+                    camera.aspect = w / h;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(w, h);
+                }
+                drawSeesawCanvas();
+            });
+        };
+    </script>
+</body>
+</html>

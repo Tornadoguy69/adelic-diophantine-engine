@@ -5,21 +5,29 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](#quick-start--reproduction)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](#license)
 [![Math: Number Theory](https://img.shields.io/badge/MSC2020-11B83_%7C_11D41-red.svg)](#mathematical-architecture--core-theorems)
+[![Live 3D Visualizer](https://img.shields.io/badge/🎮_Live_Demo-3D_Visualizer-crimson.svg)](https://htmlpreview.github.io/?https://github.com/Tornadoguy69/adelic-diophantine-engine/blob/main/adelic_diophantine_visualizer.html)
 
 This repository contains the reference implementation and formal LaTeX manuscript for *"Adelic Carry Obstructions and $(2,3)$-Adic Duality in Collatz Cycles and Generalized Fermat Equations"*. It provides an exact computational and analytical engine demonstrating how local $p$-adic carry chains ($p \in \{2, 3\}$), Archimedean positivity floors ($\mathbb{R}$), and tame splitting factor bases ($\mathcal{P}$) interact to obstruct non-trivial cycles in the $3n+1$ problem and coprime solutions to the Beal Conjecture ($A^x + B^y = C^z$).
 
 ---
 
-## Repository Structure
+## 🎮 Interactive 3D WebGL Visualizer
 
-```text
-├── adelic_diophantine_engine.py      # Standalone verification & sieve suite (Collatz + Beal)
-├── prove_no_2block_cycles.py         # Unconditional proof script ruling out 2-block cycles to infinity
-├── verify_s_block_theorems.py        # Standalone benchmark reproducing Tables 3, 4, 5, 6, and 7
-├── adelic_diophantine_visualizer.html # Interactive 3D WebGL / HTML5 Canvas phase-space visualizer
-├── adelic_carry_obstructions.tex     # Formal AMS-LaTeX manuscript (11 Theorems, proofs, and tables)
-└── README.md                         # Documentation, theorems, and reproduction benchmarks
-```
+> ### 👉 [**Launch Interactive 3D Adelic Visualizer (Live in Browser)**](https://htmlpreview.github.io/?https://github.com/Tornadoguy69/adelic-diophantine-engine/blob/main/adelic_diophantine_visualizer.html)
+> * Zero installation or build tools required — runs immediately in any modern browser via WebGL and HTML5 Canvas.
+> * Features the 3D $(2,3)$-adic phase space, $s$-block exponential seesaw plotter, and interactive native `BigInt` Sturmian bit-scrambler register.
+
+---
+
+## Repository Structure & Quick Links
+
+| File | Description | Action |
+| :--- | :--- | :---: |
+| 🎮 [**`adelic_diophantine_visualizer.html`**](adelic_diophantine_visualizer.html) | Interactive 3D Three.js Phase Space & `BigInt` Bit-Scrambler | [**Launch Online**](https://htmlpreview.github.io/?https://github.com/Tornadoguy69/adelic-diophantine-engine/blob/main/adelic_diophantine_visualizer.html) / [View File](adelic_diophantine_visualizer.html) |
+| 🐍 [**`adelic_diophantine_engine.py`**](adelic_diophantine_engine.py) | Unified verification & sieve suite (Collatz + Beal) | [View Code](adelic_diophantine_engine.py) |
+| 📐 [**`prove_no_2block_cycles.py`**](prove_no_2block_cycles.py) | Unconditional proof script ruling out 2-block cycles to infinity | [View Code](prove_no_2block_cycles.py) |
+| 📊 [**`verify_s_block_theorems.py`**](verify_s_block_theorems.py) | Standalone benchmark suite reproducing Tables 3, 4, 5, 6, and 7 | [View Code](verify_s_block_theorems.py) |
+| 📄 [**`adelic_carry_obstructions.tex`**](adelic_carry_obstructions.tex) | Formal AMS-LaTeX research manuscript (11 Theorems, proofs, and tables) | [View LaTeX](adelic_carry_obstructions.tex) |
 
 ---
 
@@ -154,8 +162,11 @@ On the extremal Sturmian attractor ($\beta_m = 1, \rho \in \{1, 2\}^s$), rationa
 
 ## Quick Start & Reproduction
 
-Requires **Python 3.9+** (zero external dependencies; pure standard library).
+### 🚀 1. Interactive 3D WebGL Visualizer (Instant Live Demo)
+* **Online (Browser):** 👉 [**Launch 3D Adelic Visualizer on HTMLPreview**](https://htmlpreview.github.io/?https://github.com/Tornadoguy69/adelic-diophantine-engine/blob/main/adelic_diophantine_visualizer.html)
+* **Local:** Open [`adelic_diophantine_visualizer.html`](adelic_diophantine_visualizer.html) in your browser.
 
+### 🐍 2. Python Verification Suite (Python 3.9+)
 ```bash
 # 1. Run the unified Collatz & Beal verification and sieve suite (~2.5 seconds)
 python3 adelic_diophantine_engine.py
@@ -169,9 +180,6 @@ python3 verify_s_block_theorems.py
 # 4. Compile the formal LaTeX paper
 pdflatex adelic_carry_obstructions.tex
 pdflatex adelic_carry_obstructions.tex
-
-# 5. Open the interactive 3D WebGL / HTML5 Canvas visualizer in any modern browser
-open adelic_diophantine_visualizer.html
 ```
 
 ---
