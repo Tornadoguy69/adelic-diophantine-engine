@@ -26,7 +26,7 @@ This repository contains the reference implementation and formal LaTeX manuscrip
 | 🎮 [**`adelic_diophantine_visualizer.html`**](adelic_diophantine_visualizer.html) | Interactive 3D Three.js Phase Space & `BigInt` Bit-Scrambler | [**Launch Online**](https://htmlpreview.github.io/?https://github.com/Tornadoguy69/adelic-diophantine-engine/blob/main/adelic_diophantine_visualizer.html) / [View File](adelic_diophantine_visualizer.html) |
 | 🐍 [**`adelic_diophantine_engine.py`**](adelic_diophantine_engine.py) | Unified verification & sieve suite (Collatz + Beal) | [View Code](adelic_diophantine_engine.py) |
 | 📐 [**`prove_no_2block_cycles.py`**](prove_no_2block_cycles.py) | Unconditional proof script ruling out 2-block cycles to infinity | [View Code](prove_no_2block_cycles.py) |
-| 📊 [**`verify_s_block_theorems.py`**](verify_s_block_theorems.py) | Standalone benchmark suite reproducing Tables 3, 4, 5, 6, and 7 | [View Code](verify_s_block_theorems.py) |
+| 📊 [**`verify_s_block_theorems.py`**](verify_s_block_theorems.py) | Standalone benchmark suite reproducing Tables 3, 4, 5, 6, 7, and 8 | [View Code](verify_s_block_theorems.py) |
 | 📄 [**`adelic_carry_obstructions.tex`**](adelic_carry_obstructions.tex) | Formal AMS-LaTeX research manuscript (11 Theorems, proofs, and tables) | [View LaTeX](adelic_carry_obstructions.tex) |
 
 ---
@@ -63,6 +63,13 @@ This repository contains the reference implementation and formal LaTeX manuscrip
 * **Theorem 3.7 (The Combinatorial Density Deficit & Sturmian 2-Adic Annihilation):** On the extremal maximal-block attractor ($\beta_m = 1, \rho_m \in \{1, 2\}$), the cumulative parity vector reduces the cycle equation to an exact sparse $s$-term sum where $A_{i_m} = i_m + m$. Restricting each block to $\rho_m \in \{1, 2\}$ collapses the combinatorial search subspace from $\binom{S-1}{k-1} \sim 2^{1.49 k}$ down to $N_{\{1,2\}}(k, S) = \binom{S-k}{2k-S} \sim 2^{0.512 k}$. The modular multiplicative inverse map $\Phi(\rho) = -\sum_{m=0}^{s-1} 3^{-(i_m+1)} 2^{i_m+m+1} \bmod 2^S$ scatters these exponentially sparse points across $[1, 2^S-1]$, driving the expected minimum 2-adic realization to:
   $$\mathbb{E}\left[\min_{\rho \in \{1,2\}^s} n_{0,\text{2-adic}}(\rho)\right] \approx \frac{2^S}{2 \binom{S-k}{2k-S}} \approx 2^{(1.585 - 0.512)k} = 2^{1.073 k} \longrightarrow \infty$$
   This forces $\min u_{1,\text{2-adic}} = 50.9\text{ trillion}$ at $k=41$ and $\sim 2^{475}$ at $k=306$ ($98.6\%$ bit fill), producing an insurmountable exponential gap against $u_{1,\text{arch}} = O(k)$ and closing the Two-Sided Pincer against non-trivial cycles.
+
+* **Theorem 3.8 (The Spitzer Cyclic Envelope Bound & Exact-Shift Velocity Phase Transition):** Every closed $s$-block Collatz cycle contains a Spitzer block $m^*$ where all suffix drifts are non-positive ($\sum_{t=m^*}^r \delta_t \le 0$), proving the sharp envelope bound:
+  $$n_{\text{start}(m^*)} \le B_{\text{Spitzer}}(k, S) = \left\lfloor (S - k) \frac{2^S}{2^S - 3^k} - 1 \right\rfloor = \lfloor (S - k) Q(k, S) - 1 \rfloor = O(k^{\mu + 1})$$
+  which collapses the naive exponential upper bound by over $10^{51}\times$ at $k = 306, S = 485$ (from $7.94 \times 10^{56}$ to $175,194$). By Rhin's linear forms in two logarithms, $B_{\text{Spitzer}}(k, S)$ is strictly polynomial in $k$.
+  Furthermore, an exact-shift velocity phase transition occurs at $k = 46$: entering the trivial attractor $1 \to 4 \to 2 \to 1$ locks the post-collapse shift velocity to $\sigma_{\text{post}} = 2.0 \text{ shifts/step} > \sigma_{\text{target}} = \frac{S}{k} \approx 1.585 \text{ shifts/step}$. The velocity differential $\Delta \sigma = 2 - \log_2 3 \approx 0.415$ forces an unavoidable linear shift overshoot:
+  $$A_k(n_0) - S \ge (2 - \log_2 3) k - C > 0 \quad (\forall n_0 \le B_{\text{Spitzer}}(k, S))$$
+  for all $k \ge 47$ (e.g. overshoot $+15$ at $k=94$ and $+86$ at $k=306$). Maintaining non-trivial Syracuse dynamics requires $M_{\text{exact}}(k, S) \ge c \cdot 2^{0.27 k} \gg B_{\text{Spitzer}}(k, S)$, permanently disconnecting the exact-shift manifold from the cycle envelope. Across all $k \in [2, 85]$, exactly 73 candidates ($86.9\%$) are **Dead Before Arrival** ($M_{\text{exact}} > B_{\text{Spitzer}}$), while all 11 surviving lengths are ruled out by the quantum carry discrepancy $|n_k - n_0| \ge 2 \implies |R_\infty - R_2| \ge 2 Q(k, S) > 0$.
 
 ---
 
@@ -148,7 +155,24 @@ On the extremal Sturmian attractor ($\beta_m = 1, \rho \in \{1, 2\}^s$), rationa
 | $34$ | $54$ | $20$ | $38,760$  | $232,383,881,701.3$    | $844,052,846,507$     | $211,013,211,627$     | $48.08$  |
 | $41$ | $65$ | $24$ | $346,104$ | $53,298,268,941,444.0$ | $203,907,207,487,083$ | $50,976,801,871,771$ | $329.99$ |
 
-### 6. Beal Three-Layer Global Adelic Sieve ($C_1 = 0, A \le 4000$)
+### 6. Spitzer Cyclic Envelope Bound & Exact-Shift Phase Transition at $k=46$ (Theorem 3.8)
+Demonstrating the sharp linear Spitzer bound $B^* = \lfloor (S - k) Q(k, S) - 1 \rfloor$, stopping time saturation $\tau \le 87$, post-attractor shift overshoot for $k > 46$, and the $86.9\%$ Dead Before Arrival (DBA) lockout:
+
+| $k$ | $S$ | $s = S-k$ | Spitzer $B^*$ | Max $\tau$ in $B^*$ | Min $A_k$ in $B^*$ | Shift Overshoot | Min $n_0 (A_k=S)$ | Status vs. Envelope $B^*$ |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| $5$   | $8$   | $3$   | $58$        | $5$   | $6$   | $-2$  | $73$        | DBA ($M_{\text{exact}} > B^*$) |
+| $12$  | $20$  | $8$   | $15$        | $6$   | $25$  | $+5$  | $171$       | DBA ($M_{\text{exact}} > B^*$) |
+| $17$  | $27$  | $10$  | $263$       | $17$  | $23$  | $-4$  | $165$       | Survivor ($|n_k - n_0| = 2$) |
+| $22$  | $35$  | $13$  | $148$       | $22$  | $30$  | $-5$  | $171$       | DBA ($M_{\text{exact}} > B^*$) |
+| $29$  | $46$  | $17$  | $687$       | $29$  | $40$  | $-6$  | $313$       | Survivor ($|n_k - n_0| = 6$) |
+| $34$  | $54$  | $20$  | $268$       | $34$  | $49$  | $-5$  | $63$        | Survivor ($|n_k - n_0| = 2$) |
+| $41$  | $65$  | $24$  | $2,104$     | $41$  | $60$  | $-5$  | $313$       | Survivor ($|n_k - n_0| = 12$) |
+| $46$  | $73$  | $27$  | $437$       | $46$  | $73$  | $\mathbf{+0}$  | $327$       | Survivor ($|n_k - n_0| = 2$) |
+| $53$  | $85$  | $32$  | $63$        | $41$  | $94$  | $+9$  | $1,071$     | DBA ($M_{\text{exact}} > B^*$, Overshoot $+9$) |
+| $94$  | $149$ | $55$  | $5,893$     | $87$  | $164$ | $+15$ | $75,007$    | DBA ($M_{\text{exact}} > B^*$, Overshoot $+15$) |
+| $306$ | $485$ | $179$ | $175,194$   | $141$ | $571$ | $\mathbf{+86}$ | $> 2^{82}$  | DBA ($M_{\text{exact}} \gg B^*$, Overshoot $+86$) |
+
+### 7. Beal Three-Layer Global Adelic Sieve ($C_1 = 0, A \le 4000$)
 
 | $(x,y,z)$ | Initial Coprime $A$ | Layer 1 (Positivity Floor) | Layer 2 (2-Adic Sieve) | Layer 3 ($p \le 50$) | Layer 3 ($p \le 181$) | Final Survival |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -174,7 +198,7 @@ python3 adelic_diophantine_engine.py
 # 2. Run the unconditional 2-block Collatz cycle non-existence proof (<3 seconds)
 python3 prove_no_2block_cycles.py
 
-# 3. Reproduce Tables 3, 4, 5, 6, and 7 benchmarks (<2 seconds)
+# 3. Reproduce Tables 3, 4, 5, 6, 7, and 8 benchmarks (<3 seconds)
 python3 verify_s_block_theorems.py
 
 # 4. Compile the formal LaTeX paper

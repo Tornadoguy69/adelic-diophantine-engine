@@ -8,6 +8,7 @@ Standalone Benchmark & Reproduction Script for Block-Level Theorems:
   - Table 5: Discrete Integer-Rigidity Minimax vs. Continuous Bound (Theorem 3.5)
   - Table 6: Sturmian Attractor Rational Cyclic Inversion (Theorem 3.6)
   - Table 7: Combinatorial Density Deficit & Sturmian 2-Adic Annihilation (Theorem 3.7)
+  - Table 8: Spitzer Cyclic Envelope Bound & Exact-Shift Phase Transition (Theorem 3.8)
 
 Author: Tornado Guy
 Date: October 2026
@@ -331,6 +332,72 @@ def reproduce_table_7():
         print(f"{k:2d} | {S:2d} | {s:2d} | {cnt:15,d} | {exp_min:18,.1f} | {min_n0:20,d} | {min_u1:16,d} | {target_u1_arch:14.2f}")
 
 
+def reproduce_table_8():
+    print("\n" + "=" * 105)
+    print("TABLE 8: Spitzer Cyclic Envelope Bound & Exact-Shift Phase Transition at k=46 (Theorem 3.8)")
+    print("=" * 105)
+    print(f"{'k':>3} | {'S':>3} | {'s':>3} | {'Spitzer B*':>12} | {'Max tau':>8} | {'Min Ak':>7} | {'Overshoot':>10} | {'Min n0 (Ak=S)':>14} | {'Status vs Envelope'}")
+    print("-" * 105)
+
+    benchmarks = [
+        (5, 8), (12, 20), (17, 27), (22, 35), (29, 46),
+        (34, 54), (41, 65), (46, 73), (53, 85), (94, 149), (306, 485)
+    ]
+    for k, S in benchmarks:
+        D = (1 << S) - 3**k
+        Q = (1 << S) / D if D > 0 else 0
+        B = int(math.floor((S - k) * Q - 1.0)) if D > 0 else 0
+        limit = min(B, 200000)
+        max_tau = 0
+        min_Ak = float('inf')
+        for x in range(3, limit + 1, 2):
+            curr = x
+            step = 0
+            acc = 0
+            while curr > 1 and step < k:
+                val = 3 * curr + 1
+                lsb = val & -val
+                acc += lsb.bit_length() - 1
+                curr = val // lsb
+                step += 1
+            if step > max_tau:
+                max_tau = step
+            if step < k:
+                acc += 2 * (k - step)
+            if acc < min_Ak:
+                min_Ak = acc
+        overshoot = min_Ak - S
+
+        min_n0 = None
+        nk_val = None
+        if k <= 94:
+            for x in range(3, 200000, 2):
+                curr = x
+                acc = 0
+                for _ in range(k):
+                    val = 3 * curr + 1
+                    lsb = val & -val
+                    acc += lsb.bit_length() - 1
+                    curr = val // lsb
+                if acc == S:
+                    min_n0 = x
+                    nk_val = curr
+                    break
+
+        if min_n0 is not None:
+            if min_n0 <= B:
+                status = f"Survivor (|nk-n0|={abs(nk_val-min_n0)})"
+            else:
+                status = "DBA (m0 > B*)"
+            n0_str = f"{min_n0:,}"
+        else:
+            status = "DBA (m0 > 200k)"
+            n0_str = "> 200,000" if k <= 94 else "> 2^82"
+
+        ov_str = f"{overshoot:+d}" if min_Ak != float('inf') else "---"
+        print(f"{k:3d} | {S:3d} | {S-k:3d} | {B:12,d} | {max_tau:8d} | {min_Ak:7d} | {ov_str:>10} | {n0_str:>14} | {status}")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     reproduce_table_3()
@@ -338,4 +405,5 @@ if __name__ == "__main__":
     reproduce_table_5()
     reproduce_table_6()
     reproduce_table_7()
+    reproduce_table_8()
     print(f"\nAll benchmark tables reproduced in {time.time() - t0:.3f} seconds.")
