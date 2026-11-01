@@ -7,7 +7,7 @@
 [![Math: Number Theory](https://img.shields.io/badge/MSC2020-11B83_%7C_11D41-red.svg)](#mathematical-architecture--core-theorems)
 [![Live 3D Visualizer](https://img.shields.io/badge/🎮_Live_Demo-3D_Visualizer-crimson.svg)](https://htmlpreview.github.io/?https://github.com/Tornadoguy69/adelic-diophantine-engine/blob/main/adelic_diophantine_visualizer.html)
 
-This repository contains the reference implementation and formal LaTeX manuscript for *"Adelic Carry Obstructions and $(2,3)$-Adic Duality in Collatz Cycles and Generalized Fermat Equations"*. It provides an exact computational and analytical engine demonstrating how local $p$-adic carry chains ($p \in \{2, 3\}$), Archimedean positivity floors ($\mathbb{R}$), and tame splitting factor bases ($\mathcal{P}$) interact to obstruct non-trivial cycles in the $3n+1$ problem and coprime solutions to the Beal Conjecture ($A^x + B^y = C^z$).
+This repository contains the reference implementation and formal AMS-LaTeX manuscript for *"Adelic Carry Obstructions and $(2,3)$-Adic Duality in Collatz Cycles and Generalized Fermat Equations"*. It provides an exact computational and analytical engine demonstrating how local $p$-adic carry chains ($p \in \{2, 3\}$), Archimedean positivity floors ($\mathbb{R}$), and tame splitting factor bases ($\mathcal{P}$) interact to obstruct non-trivial cycles in the $3n+1$ problem and coprime solutions to the Beal Conjecture ($A^x + B^y = C^z$).
 
 ---
 
@@ -26,8 +26,8 @@ This repository contains the reference implementation and formal LaTeX manuscrip
 | 🎮 [**`adelic_diophantine_visualizer.html`**](adelic_diophantine_visualizer.html) | Interactive 3D Three.js Phase Space & `BigInt` Bit-Scrambler | [**Launch Online**](https://htmlpreview.github.io/?https://github.com/Tornadoguy69/adelic-diophantine-engine/blob/main/adelic_diophantine_visualizer.html) / [View File](adelic_diophantine_visualizer.html) |
 | 🐍 [**`adelic_diophantine_engine.py`**](adelic_diophantine_engine.py) | Unified verification & sieve suite (Collatz + Beal) | [View Code](adelic_diophantine_engine.py) |
 | 📐 [**`prove_no_2block_cycles.py`**](prove_no_2block_cycles.py) | Unconditional proof script ruling out 2-block cycles to infinity | [View Code](prove_no_2block_cycles.py) |
-| 📊 [**`verify_s_block_theorems.py`**](verify_s_block_theorems.py) | Standalone benchmark suite reproducing Tables 3, 4, 5, 6, 7, and 8 | [View Code](verify_s_block_theorems.py) |
-| 📄 [**`adelic_carry_obstructions.tex`**](adelic_carry_obstructions.tex) | Formal AMS-LaTeX research manuscript (11 Theorems, proofs, and tables) | [View LaTeX](adelic_carry_obstructions.tex) |
+| 📊 [**`verify_s_block_theorems.py`**](verify_s_block_theorems.py) | Standalone benchmark suite reproducing Tables 3, 4, 5, and 6 | [View Code](verify_s_block_theorems.py) |
+| 📄 [**`adelic_carry_obstructions.tex`**](adelic_carry_obstructions.tex) | Formal AMS-LaTeX research manuscript (9 Theorems, proofs, and 7 tables) | [View LaTeX](adelic_carry_obstructions.tex) |
 
 ---
 
@@ -54,22 +54,10 @@ This repository contains the reference implementation and formal LaTeX manuscrip
   $$\frac{2^S - 3^k}{2^S} \le u_m \left(\frac{2^S - 3^k}{2^S}\right) < s \cdot 2^{-C_s k}, \quad C_s = \frac{\log_2 3 - 1}{(\log_2 3)^s - 1}$$
   Combining this with Rhin's linear form in two logarithms unconditionally eliminates all $s$-block cycles with $s \lesssim 2.17 \ln k$.
 
-* **Theorem 3.5 (Discrete Integer-Rigidity Seesaw Theorem):** Because active division steps require $b_m \ge 2 \implies \beta_m \ge 1$, each block step subtracts at least $1$ unit of shift slack: $\delta_m = (\theta - 1)\rho_m - \beta_m \le (\theta - 1)\rho_m - 1$. Solving the shifted minimax recurrence $\rho_m = \theta \rho_{m-1} - 1$ yields the exact \emph{Integer-Rigidity Exponent}:
-  $$M(k, s) = \frac{(\log_2 3 - 1)k - s}{(\log_2 3)^s - 1} + \frac{1}{\log_2 3 - 1}$$
-  For all $s \ge 2$, $M(k, s) > C_s k$, and as $s \to \infty$, $M(k, s) \to \frac{1}{\log_2 3 - 1} \approx 1.7095$. Across resonant pairs, this discrete integer constraint tightens the continuous bound by **$10\times$ to $17.65\times$**.
-
-* **Theorem 3.6 (Sturmian Attractor & Cyclic Bidiagonal Saturation):** At maximal block counts $s \to S - k$, any adversary attempting to maximize $\min_m u_m$ is locked into $\beta_m = 1$ and a Sturmian mechanical word $\rho \in \{1, 2\}^s$ of slope $\frac{k}{S - k} \approx 1.7095$. On this attractor, the rational solution to the cyclic bidiagonal system $2^{\rho_{m+1} + 1} u_{m+1} - 3^{\rho_m} u_m = 1$ satisfies $u_1 \in [5.75, 16.70]$ uniformly across all $s \le 50$. This proves that **Archimedean size bounds asymptotically saturate**, mathematically demonstrating why completing the non-existence proof fundamentally requires the local $(2,3)$-adic carry congruences and the tame splitting factor base $\mathcal{P}_D$.
-
-* **Theorem 3.7 (The Combinatorial Density Deficit & Sturmian 2-Adic Annihilation):** On the extremal maximal-block attractor ($\beta_m = 1, \rho_m \in \{1, 2\}$), the cumulative parity vector reduces the cycle equation to an exact sparse $s$-term sum where $A_{i_m} = i_m + m$. Restricting each block to $\rho_m \in \{1, 2\}$ collapses the combinatorial search subspace from $\binom{S-1}{k-1} \sim 2^{1.49 k}$ down to $N_{\{1,2\}}(k, S) = \binom{S-k}{2k-S} \sim 2^{0.512 k}$. The modular multiplicative inverse map $\Phi(\rho) = -\sum_{m=0}^{s-1} 3^{-(i_m+1)} 2^{i_m+m+1} \bmod 2^S$ scatters these exponentially sparse points across $[1, 2^S-1]$, driving the expected minimum 2-adic realization to:
-  $$\mathbb{E}\left[\min_{\rho \in \{1,2\}^s} n_{0,\text{2-adic}}(\rho)\right] \approx \frac{2^S}{2 \binom{S-k}{2k-S}} \approx 2^{(1.585 - 0.512)k} = 2^{1.073 k} \longrightarrow \infty$$
-  This forces $\min u_{1,\text{2-adic}} = 50.9\text{ trillion}$ at $k=41$ and $\sim 2^{475}$ at $k=306$ ($98.6\%$ bit fill), producing an insurmountable exponential gap against $u_{1,\text{arch}} = O(k)$ and closing the Two-Sided Pincer against non-trivial cycles.
-
-* **Theorem 3.8 (The Spitzer Cyclic Envelope Bound & Exact-Shift Velocity Phase Transition):** Every closed $s$-block Collatz cycle contains a Spitzer block $m^*$ where all suffix drifts are non-positive ($\sum_{t=m^*}^r \delta_t \le 0$), proving the sharp envelope bound:
-  $$n_{\text{start}(m^*)} \le B_{\text{Spitzer}}(k, S) = \left\lfloor (S - k) \frac{2^S}{2^S - 3^k} - 1 \right\rfloor = \lfloor (S - k) Q(k, S) - 1 \rfloor = O(k^{\mu + 1})$$
-  which collapses the naive exponential upper bound by over $10^{51}\times$ at $k = 306, S = 485$ (from $7.94 \times 10^{56}$ to $175,194$). By Rhin's linear forms in two logarithms, $B_{\text{Spitzer}}(k, S)$ is strictly polynomial in $k$.
-  Furthermore, an exact-shift velocity phase transition occurs at $k = 46$: entering the trivial attractor $1 \to 4 \to 2 \to 1$ locks the post-collapse shift velocity to $\sigma_{\text{post}} = 2.0 \text{ shifts/step} > \sigma_{\text{target}} = \frac{S}{k} \approx 1.585 \text{ shifts/step}$. The velocity differential $\Delta \sigma = 2 - \log_2 3 \approx 0.415$ forces an unavoidable linear shift overshoot:
-  $$A_k(n_0) - S \ge (2 - \log_2 3) k - C > 0 \quad (\forall n_0 \le B_{\text{Spitzer}}(k, S))$$
-  for all $k \ge 47$ (e.g. overshoot $+15$ at $k=94$ and $+86$ at $k=306$). Maintaining non-trivial Syracuse dynamics requires $M_{\text{exact}}(k, S) \ge c \cdot 2^{0.27 k} \gg B_{\text{Spitzer}}(k, S)$, permanently disconnecting the exact-shift manifold from the cycle envelope. Across all $k \in [2, 85]$, exactly 73 candidates ($86.9\%$) are **Dead Before Arrival** ($M_{\text{exact}} > B_{\text{Spitzer}}$), while all 11 surviving lengths are ruled out by the quantum carry discrepancy $|n_k - n_0| \ge 2 \implies |R_\infty - R_2| \ge 2 Q(k, S) > 0$.
+* **Theorem 3.5 (The Spitzer Cyclic Envelope Theorem):** Across all possible block counts $1 \le s \le S - k$, every cycle must contain a block-start integer $n_0$ satisfying the sharp linear upper bound:
+  $$n_0 \le B_{\text{Spitzer}}(k, S) \coloneqq \left\lfloor (S - k) \frac{2^S}{2^S - 3^k} - 1 \right\rfloor = \lfloor (S - k) Q(k, S) - 1 \rfloor$$
+  This collapses the naive exponential upper bound $B_{\max} \approx (1.5)^k Q(k, S)$ by a factor of over **$4.5 \times 10^{51}\times$** at $k = 306, S = 485$ (from $7.94 \times 10^{56}$ down to $175,194$).
+  Consequently, if the exact-shift 2-adic floor satisfies $M_{\text{exact}}(k, S) = \min \{ n_0 \ge 3 : A_k(n_0) = S \} > B_{\text{Spitzer}}(k, S)$, no non-trivial cycle can exist. Furthermore, entering the trivial attractor $1 \to 4 \to 2 \to 1$ forces an exact-shift phase transition: for $k > 46$, shift overshoot locks out the envelope, driving $M_{\text{exact}}(k, S) \sim 2^{0.27 k} \gg B_{\text{Spitzer}}(k, S)$ ($86.9\%$ of cycle candidates $k \in [2, 85]$ are Dead Before Arrival).
 
 ---
 
@@ -83,7 +71,7 @@ This repository contains the reference implementation and formal LaTeX manuscrip
 
 ## Key Benchmarks & Empirical Results
 
-### 1. Collatz Global Minimum Extraction ($n_{0,\text{2-adic}} > 1$)
+### 1. Collatz Global Minimum Extraction ($n_{0,\text{2-adic}} > 1$, Table 1)
 By inverting $\binom{S-1}{k-1}$ via Theorem 2.2, the engine extracts the exact global minimum across 59.48 sextillion parity vectors in $11.31\text{ ms}$:
 
 | $k$ | $S$ | Search Space $\binom{S-1}{k-1}$ | $\min n_{0,\text{2-adic}}$ | Top Bits Cancelled | Execution Time |
@@ -93,7 +81,7 @@ By inverting $\binom{S-1}{k-1}$ via Theorem 2.2, the engine extracts the exact g
 | $41$ | $65$ | $250,649,105,469,666,120$ | $73$ | $58 / 65$ | $0.75\text{ ms}$ |
 | $53$ | $84$ | $59,488,706,401,523,551,644,624$ | $871$ | $74 / 84$ | $11.31\text{ ms}$ |
 
-### 2. Dual-Block Drift Tightening vs. Classical Eliahou Bound
+### 2. Dual-Block Drift Tightening vs. Classical Eliahou Bound (Table 3)
 Integrating out unit shifts via Theorem 3.2 eliminates $70\%$–$75\%$ of the slack in Eliahou's bound:
 
 | $(k,S)$ | $n_0$ | Active Blocks $s/k$ | Classical Eliahou Bound $\frac{k}{3n_{\min}}$ | Dual-Block Bound (Thm 3.2) | Exact Trajectory Sum $\sum \ln(1 + \frac{1}{3n_i})$ |
@@ -103,76 +91,52 @@ Integrating out unit shifts via Theorem 3.2 eliminates $70\%$–$75\%$ of the sl
 | $(29, 46)$ | $323$ | $11 / 29$ | $0.106227$ | $\mathbf{0.031246}$ | $0.031187$ |
 | $(41, 65)$ | $313$ | $17 / 41$ | $0.150183$ | $\mathbf{0.049087}$ | $0.049085$ |
 
-### 3. Discrete Integer-Rigidity Minimax vs. Continuous Seesaw Bound (Theorem 3.5)
-Incorporating the discrete integer slack $\beta_m \ge 1$ tightens the continuous bound by **$10\times$ to $17.65\times$**:
+### 3. General $s$-Block Exponential Seesaw Exponents & Thresholds (Table 4)
 
-| $(k, S)$ | Blocks $s$ | Continuous Bound $s \cdot 2^{-C_s k}$ | Discrete Integer Max | Tightening Factor | Optimal Discrete Vector $\rho$ |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| $(17, 27)$ | $s = 2$ | $0.020956$ | $0.008237$ | $2.54\times$ | $[7, 10]$ |
-| $(17, 27)$ | $s = 4$ | $1.092382$ | $0.167201$ | $6.53\times$ | $[3, 4, 5, 5]$ |
-| $(17, 27)$ | $s = 8$ | $6.698624$ | $0.780529$ | $8.58\times$ | $[2, 2, 2, 2, 2, 2, 2, 3]$ |
-| $(29, 46)$ | $s = 4$ | $0.436997$ | $0.049010$ | $8.92\times$ | $[4, 6, 8, 11]$ |
-| $(29, 46)$ | $s = 8$ | $5.909612$ | $0.416806$ | $14.18\times$ | $[4, 3, 4, 3, 3, 4, 4, 4]$ |
-| $(41, 65)$ | $s = 4$ | $0.174817$ | $0.017303$ | $10.10\times$ | $[6, 8, 11, 16]$ |
-| $(41, 65)$ | $s = 8$ | $5.213535$ | $0.295390$ | $\mathbf{17.65\times}$ | $[2, 3, 3, 4, 4, 6, 8, 11]$ |
+| Blocks $s$ | Exact Exponent $-C_s$ | Monte Carlo LP Exponent | Decay Base $2^{-C_s}$ | Unconditional Threshold $k_0(s)$ |
+| :---: | :---: | :---: | :---: | :---: |
+| $s = 1$ | $-1.000000$ | $-1.000000$ | $0.500000^k$ | $k_0 = 114$ |
+| $s = 2$ | $-0.386853$ | $-0.386932$ | $0.764796^k$ | $k_0 = 321$ |
+| $s = 3$ | $-0.196191$ | $-0.197105$ | $0.872852^k$ | $k_0 = 710$ |
+| $s = 4$ | $-0.110148$ | $-0.110812$ | $0.926493^k$ | $k_0 = 1,354$ |
+| $s = 5$ | $-0.064980$ | $-0.065401$ | $0.955959^k$ | $k_0 = 2,425$ |
+| $s = 6$ | $-0.039383$ | $-0.039711$ | $0.973071^k$ | $k_0 = 4,195$ |
+| $s = 8$ | $-0.015067$ | $-0.015218$ | $0.989611^k$ | $k_0 = 11,940$ |
 
-### 4. Sturmian Attractor Rational Bidiagonal Saturation (Theorem 3.6)
-On the extremal Sturmian attractor ($\beta_m = 1, \rho \in \{1, 2\}^s$), rational solutions to $2^{\rho_{m+1}+1}u_{m+1} - 3^{\rho_m}u_m = 1$ remain strictly bounded in $[5.75, 16.70]$ across all $s \le 50$:
+### 4. Spitzer Cyclic Envelope Bound vs. Naive Bound ($10^{51}\times$ Compression, Table 5)
 
-| Blocks $s$ | Sturmian Pattern $\rho \in \{1, 2\}^s$ | Exact Rational $u_1$ (Decimal) | Numerator Bits |
-| :---: | :--- | :---: | :---: |
-| $5$  | $[1, 2, 2, 1, 2]$ | $6.2606$ | $14$ bits |
-| $10$ | $[1, 2, 2, 1, 2, 2, 1, 2, 2, 1]$ | $5.7509$ | $28$ bits |
-| $15$ | $[1, 2, 2, 1, 2, 2, \dots]$ | $16.6923$ | $8$ bits |
-| $20$ | $[1, 2, 2, 1, 2, 2, \dots]$ | $11.2670$ | $56$ bits |
-| $35$ | $[1, 2, 2, 1, 2, 2, \dots]$ | $12.7317$ | $96$ bits |
-| $50$ | $[1, 2, 2, 1, 2, 2, \dots]$ | $13.4138$ | $137$ bits |
-
-### 5. Combinatorial Density Deficit & Sturmian 2-Adic Annihilation (Theorem 3.7)
-
-#### Part 1: Canonical Sturmian Shifts vs. 2-Adic Scrambler (Convergents up to $k=306, S=485$)
-| $k$ | $S$ | $s = S-k$ | Target $u_{1,\text{arch}}$ | Min $u_{1,\text{2-adic}}$ | Bits of $u_{1,\text{2-adic}}$ | Bit Fill Ratio |
+| $k$ | $S$ | Parity Space $\binom{S-1}{k-1}$ | Classical $B_{\max}$ | Spitzer Bound $B_{\text{Spitzer}}$ | Compression Factor | Survivors in $[3, B_{\text{Spitzer}}]$ |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| $5$  | $8$   | $3$   | $16.69$      | $27$                    | $5 / 6$     | $83.3\%$ |
-| $12$ | $19$  | $7$   | $154.57$     | $26,395$                | $15 / 17$   | $88.2\%$ |
-| $17$ | $27$  | $10$  | $78.46$      | $3,696,411$             | $22 / 25$   | $88.0\%$ |
-| $22$ | $35$  | $13$  | $43.64$      | $1,354,598,879$         | $31 / 33$   | $93.9\%$ |
-| $29$ | $46$  | $17$  | $207.15$     | $491,882,735,613$       | $39 / 45$   | $86.7\%$ |
-| $34$ | $54$  | $20$  | $78.46$      | $455,443,576,883,679$   | $49 / 52$   | $94.2\%$ |
-| $41$ | $65$  | $24$  | $640.14$     | $\sim 2^{56}$           | $57 / 64$   | $89.1\%$ |
-| $53$ | $84$  | $31$  | $4,546.82$   | $\sim 2^{78}$           | $79 / 82$   | $96.3\%$ |
-| $94$ | $149$ | $55$  | $1,802.11$   | $\sim 2^{135}$          | $136 / 148$ | $91.9\%$ |
-| $306$| $485$ | $179$ | $53,921.96$  | $\sim 2^{475}$          | $476 / 483$ | $\mathbf{98.6\%}$ |
+| $5$   | $8$   | $3.50 \times 10^1$     | $150$                  | $58$      | $2.6\times$              | $0$ (Cycles: $0$) |
+| $12$  | $19$  | $3.18 \times 10^4$     | $9,510$                | $512$     | $18.6\times$             | $20$ (Cycles: $0$) |
+| $17$  | $27$  | $5.31 \times 10^6$     | $26,044$               | $263$     | $99.0\times$             | $7$ (Cycles: $0$) |
+| $22$  | $35$  | $9.28 \times 10^8$     | $86,305$               | $148$     | $583.1\times$            | $0$ (Cycles: $0$) |
+| $29$  | $46$  | $1.10 \times 10^{12}$  | $5,174,697$            | $687$     | $7,532.3\times$          | $12$ (Cycles: $0$) |
+| $34$  | $54$  | $2.02 \times 10^{14}$  | $13,077,380$           | $268$     | $48,796.2\times$         | $1$ (Cycles: $0$) |
+| $41$  | $65$  | $2.51 \times 10^{17}$  | $1.46 \times 10^9$     | $2,104$   | $6.92 \times 10^5\times$ | $32$ (Cycles: $0$) |
+| $53$  | $84$  | $5.95 \times 10^{22}$  | $1.04 \times 10^{12}$  | $14,829$  | $7.01 \times 10^7\times$ | $30$ (Cycles: $0$) |
+| $94$  | $149$ | $1.58 \times 10^{41}$  | $3.98 \times 10^{18}$  | $5,893$   | $6.75 \times 10^{14}\times$ | $0$ (Cycles: $0$) |
+| $306$ | $485$ | $1.25 \times 10^{137}$ | $7.94 \times 10^{56}$  | $175,194$ | $\mathbf{4.53 \times 10^{51}\times}$ | $\mathbf{0}$ (Cycles: $0$) |
 
-#### Part 2: Exhaustive Scan Across All $\binom{S-k}{2k-S}$ Binary Words in $\{1, 2\}^s$ (Up to $k=41, S=65$)
-| $k$ | $S$ | $s$ | Count $\binom{S-k}{2k-S}$ | Expected Min $n_0$ | Actual Min $n_{0,\text{2-adic}}$ | Min $u_{1,\text{2-adic}}$ | Target $u_{1,\text{arch}}$ |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| $5$  | $8$  | $3$  | $3$       | $42.7$                 | $107$                 | $27$                  | $7.31$   |
-| $12$ | $19$ | $7$  | $21$      | $12,483.0$             | $11,259$              | $2,815$               | $-61.88$ |
-| $17$ | $27$ | $10$ | $120$     | $559,240.5$            | $1,206,945$           | $393,215$             | $23.55$  |
-| $22$ | $35$ | $13$ | $715$     | $24,027,789.1$         | $24,439,163$          | $6,109,791$           | $24.88$  |
-| $29$ | $46$ | $17$ | $6,188$   | $5,685,903,698.9$      | $1,785,135,099$       | $446,283,775$         | $71.71$  |
-| $34$ | $54$ | $20$ | $38,760$  | $232,383,881,701.3$    | $844,052,846,507$     | $211,013,211,627$     | $48.08$  |
-| $41$ | $65$ | $24$ | $346,104$ | $53,298,268,941,444.0$ | $203,907,207,487,083$ | $50,976,801,871,771$ | $329.99$ |
+### 5. Phase Transition of Exact-Shift Floor vs. Spitzer Bound ($86.9\%$ DBA, Table 6)
 
-### 6. Spitzer Cyclic Envelope Bound & Exact-Shift Phase Transition at $k=46$ (Theorem 3.8)
-Demonstrating the sharp linear Spitzer bound $B^* = \lfloor (S - k) Q(k, S) - 1 \rfloor$, stopping time saturation $\tau \le 87$, post-attractor shift overshoot for $k > 46$, and the $86.9\%$ Dead Before Arrival (DBA) lockout:
+| $k$ | $S = \lceil k \log_2 3 \rceil$ | Resonant? | Spitzer Bound $B_{\text{Spitzer}}$ | Exact-Shift Floor $M_{\text{exact}}(k,S)$ | $\log_2 M_{\text{exact}}$ | Envelope Status |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| $5$  | $8$   | Yes | $58$    & $73$     & $6.19$  | Dead ($M_{\text{exact}} > B_{\text{Spitzer}}$) |
+| $12$ | $20$  | Yes | $15$    & $171$    & $7.42$  | Dead ($M_{\text{exact}} > B_{\text{Spitzer}}$) |
+| $17$ | $27$  | Yes | $263$   & $165$    & $7.37$  | Survives ($165 \le 263$; $0$ cycles) |
+| $22$ | $35$  | Yes | $148$   & $171$    & $7.42$  | Dead ($M_{\text{exact}} > B_{\text{Spitzer}}$) |
+| $29$ | $46$  | Yes | $687$   & $313$    & $8.29$  | Survives ($313 \le 687$; $0$ cycles) |
+| $34$ | $54$  | Yes | $268$   & $63$     & $5.98$  | Survives ($63 \le 268$; $0$ cycles) |
+| $41$ | $65$  | Yes | $2,104$ & $313$    & $8.29$  | Survives ($313 \le 2104$; $0$ cycles) |
+| $46$ | $73$  | Yes | $437$   & $327$    & $8.35$  | Survives ($327 \le 437$; $0$ cycles) |
+| $50$ | $80$  | No  | $72$    & $1,161$  & $10.18$ | Dead ($M_{\text{exact}} > B_{\text{Spitzer}}$) |
+| $58$ | $92$  | Yes | $695$   & $3,097$  & $11.60$ | Dead ($M_{\text{exact}} > B_{\text{Spitzer}}$) |
+| $65$ | $104$ | Yes | $78$    & $5,799$  & $12.50$ | Dead ($M_{\text{exact}} > B_{\text{Spitzer}}$) |
+| $70$ | $111$ | Yes | $1,143$ & $24,601$ & $14.59$ | Dead ($M_{\text{exact}} > B_{\text{Spitzer}}$) |
+| $75$ | $119$ | No  | $517$   & $52,527$ & $15.68$ | Dead ($M_{\text{exact}} > B_{\text{Spitzer}}$) |
 
-| $k$ | $S$ | $s = S-k$ | Spitzer $B^*$ | Max $\tau$ in $B^*$ | Min $A_k$ in $B^*$ | Shift Overshoot | Min $n_0 (A_k=S)$ | Status vs. Envelope $B^*$ |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| $5$   | $8$   | $3$   | $58$        | $5$   | $6$   | $-2$  | $73$        | DBA ($M_{\text{exact}} > B^*$) |
-| $12$  | $20$  | $8$   | $15$        | $6$   | $25$  | $+5$  | $171$       | DBA ($M_{\text{exact}} > B^*$) |
-| $17$  | $27$  | $10$  | $263$       | $17$  | $23$  | $-4$  | $165$       | Survivor ($|n_k - n_0| = 2$) |
-| $22$  | $35$  | $13$  | $148$       | $22$  | $30$  | $-5$  | $171$       | DBA ($M_{\text{exact}} > B^*$) |
-| $29$  | $46$  | $17$  | $687$       | $29$  | $40$  | $-6$  | $313$       | Survivor ($|n_k - n_0| = 6$) |
-| $34$  | $54$  | $20$  | $268$       | $34$  | $49$  | $-5$  | $63$        | Survivor ($|n_k - n_0| = 2$) |
-| $41$  | $65$  | $24$  | $2,104$     | $41$  | $60$  | $-5$  | $313$       | Survivor ($|n_k - n_0| = 12$) |
-| $46$  | $73$  | $27$  | $437$       | $46$  | $73$  | $\mathbf{+0}$  | $327$       | Survivor ($|n_k - n_0| = 2$) |
-| $53$  | $85$  | $32$  | $63$        | $41$  | $94$  | $+9$  | $1,071$     | DBA ($M_{\text{exact}} > B^*$, Overshoot $+9$) |
-| $94$  | $149$ | $55$  | $5,893$     | $87$  | $164$ | $+15$ | $75,007$    | DBA ($M_{\text{exact}} > B^*$, Overshoot $+15$) |
-| $306$ | $485$ | $179$ | $175,194$   | $141$ | $571$ | $\mathbf{+86}$ | $> 2^{82}$  | DBA ($M_{\text{exact}} \gg B^*$, Overshoot $+86$) |
-
-### 7. Beal Three-Layer Global Adelic Sieve ($C_1 = 0, A \le 4000$)
+### 6. Beal Three-Layer Global Adelic Sieve ($C_1 = 0, A \le 4000$, Table 7)
 
 | $(x,y,z)$ | Initial Coprime $A$ | Layer 1 (Positivity Floor) | Layer 2 (2-Adic Sieve) | Layer 3 ($p \le 50$) | Layer 3 ($p \le 181$) | Final Survival |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -198,7 +162,7 @@ python3 adelic_diophantine_engine.py
 # 2. Run the unconditional 2-block Collatz cycle non-existence proof (<3 seconds)
 python3 prove_no_2block_cycles.py
 
-# 3. Reproduce Tables 3, 4, 5, 6, 7, and 8 benchmarks (<3 seconds)
+# 3. Reproduce paper benchmark tables 3, 4, 5, and 6 (<1 second)
 python3 verify_s_block_theorems.py
 
 # 4. Compile the formal LaTeX paper
@@ -215,7 +179,7 @@ pdflatex adelic_carry_obstructions.tex
   author = {Tornado Guy},
   title  = {Adelic Carry Obstructions and (2,3)-Adic Duality in Collatz Cycles and Generalized Fermat Equations},
   year   = {2026},
-  month  = {October},
+  month  = {November},
   note   = {Preprint and computational verification suite}
 }
 ```

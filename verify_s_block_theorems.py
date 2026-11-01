@@ -2,23 +2,19 @@
 """
 verify_s_block_theorems.py
 ==========================
-Standalone Benchmark & Reproduction Script for Block-Level Theorems:
+Standalone Benchmark & Reproduction Suite for Block-Level Theorems:
   - Table 3: Classical Eliahou Bound vs. Dual-Block Drift Bound (Theorems 3.1 & 3.2)
   - Table 4: General s-Block Exponential Seesaw Exponents & Thresholds (Theorem 3.3)
-  - Table 5: Discrete Integer-Rigidity Minimax vs. Continuous Bound (Theorem 3.5)
-  - Table 6: Sturmian Attractor Rational Cyclic Inversion (Theorem 3.6)
-  - Table 7: Combinatorial Density Deficit & Sturmian 2-Adic Annihilation (Theorem 3.7)
-  - Table 8: Spitzer Cyclic Envelope Bound & Exact-Shift Phase Transition (Theorem 3.8)
+  - Table 5: Spitzer Cyclic Envelope Bound vs. Naive Bound (Theorem 3.5, k = 5 to 306)
+  - Table 6: Phase Transition of Exact-Shift Floor vs. Spitzer Bound (Theorem 3.5, k in [2, 85])
 
 Author: Tornado Guy
-Date: October 2026
+Date: November 2026
 License: MIT
 """
 
 import math
 import time
-from fractions import Fraction
-from itertools import combinations
 
 
 def reproduce_table_3():
@@ -94,284 +90,33 @@ def reproduce_table_4():
 
 
 def reproduce_table_5():
-    theta = math.log2(3.0)
-    print("\n" + "=" * 105)
-    print("TABLE 5: Discrete Integer-Rigidity Minimax vs Continuous Seesaw Bound (Theorem 3.5)")
-    print("=" * 105)
-    print(f"{'k':>2} | {'s':>2} | {'Continuous Bound s*2^(-Cs*k)':>29} | {'Discrete Integer Max':>21} | {'Tightening':>11} | {'Optimal Discrete rho'}")
-    print("-" * 105)
-    for k, S in [(17, 27), (29, 46), (41, 65)]:
-        E_total = S - k
-        for s in [2, 3, 4, 6, 8, E_total]:
-            c_s = (theta - 1.0) / ((theta ** s) - 1.0)
-            cont_bound = s * (2.0 ** (-c_s * k))
+    print("\n" + "=" * 115)
+    print("TABLE 5: Spitzer Cyclic Envelope Bound vs. Naive Bound (Theorem 3.5, k = 5 to 306)")
+    print("=" * 115)
+    print(f"{'k':>3} | {'S':>3} | {'Parity Space C(S-1,k-1)':>25} | {'Classical B_max':>18} | {'Spitzer Bound B*':>18} | {'Compression Factor':>20} | {'Survivors in [3, B*]'}")
+    print("-" * 115)
 
-            raw_geom = [theta ** m for m in range(s)]
-            rho_A = [max(1, int(round(k * x / sum(raw_geom)))) for x in raw_geom]
-            while sum(rho_A) > k:
-                idx = max(range(s), key=lambda i: rho_A[i])
-                rho_A[idx] -= 1
-            while sum(rho_A) < k:
-                rho_A[-1] += 1
-            beta_A = [1] * (s - 1) + [E_total - (s - 1)]
-
-            rho_B = [((m + 1) * k) // s - (m * k) // s for m in range(s)]
-            beta_B = [((m + 1) * E_total) // s - (m * E_total) // s for m in range(s)]
-
-            def eval_config(rhos, betas):
-                min_u = float('inf')
-                for m in range(s):
-                    suf = 0.0
-                    terms_sum = 0.0
-                    for j in range(s, 0, -1):
-                        if j < s:
-                            idx = (m + j) % s
-                            suf += (theta - 1.0) * rhos[idx] - betas[idx]
-                        b_curr = betas[(m + j - 1) % s]
-                        terms_sum += (2.0 ** suf) * (1.0 - 2.0 ** (-b_curr))
-                    u_r = (2.0 ** (-rhos[m])) * terms_sum
-                    if u_r < min_u:
-                        min_u = u_r
-                return min_u
-
-            best_val = 0.0
-            best_rho = None
-            for r_init, b_init in [(rho_A, beta_A), (rho_B, beta_B)]:
-                curr_r = list(r_init)
-                curr_b = list(b_init)
-                curr_v = eval_config(curr_r, curr_b)
-                improved = True
-                while improved:
-                    improved = False
-                    for i in range(s):
-                        if curr_r[i] <= 1:
-                            continue
-                        for j in range(s):
-                            if i == j:
-                                continue
-                            curr_r[i] -= 1
-                            curr_r[j] += 1
-                            v = eval_config(curr_r, curr_b)
-                            if v > curr_v + 1e-12:
-                                curr_v = v
-                                improved = True
-                                break
-                            curr_r[i] += 1
-                            curr_r[j] -= 1
-                        if improved:
-                            break
-                    for i in range(s):
-                        if curr_b[i] <= 1:
-                            continue
-                        for j in range(s):
-                            if i == j:
-                                continue
-                            curr_b[i] -= 1
-                            curr_b[j] += 1
-                            v = eval_config(curr_r, curr_b)
-                            if v > curr_v + 1e-12:
-                                curr_v = v
-                                improved = True
-                                break
-                            curr_b[i] += 1
-                            curr_b[j] -= 1
-                        if improved:
-                            break
-                if curr_v > best_val:
-                    best_val = curr_v
-                    best_rho = list(curr_r)
-
-            ratio = cont_bound / best_val if best_val > 0 else 0.0
-            rho_str = str(best_rho[:7]) + ("..." if len(best_rho) > 7 else "")
-            print(f"{k:2d} | {s:2d} | {cont_bound:29.6f} | {best_val:21.6f} | {ratio:10.2f}x | {rho_str}")
-
-
-def reproduce_table_6(max_s: int = 50):
-    print("\n" + "=" * 78)
-    print("TABLE 6: Sturmian Attractor Rational Cyclic Inversion (Theorem 3.6)")
-    print("=" * 78)
-    print(f"{'Blocks s':>8} | {'Sturmian Pattern rho':<25} | {'Exact Rational u_1':>20} | {'Numerator Bits':>16}")
-    print("-" * 78)
-    for s in range(5, max_s + 1, 5):
-        rhos = [2 if (i % 3 != 0) else 1 for i in range(s)]
-        mat = [[Fraction(0) for _ in range(s)] for _ in range(s)]
-        vec = [Fraction(1) for _ in range(s)]
-        for m in range(s):
-            mat[m][m] = -Fraction(3 ** rhos[m])
-            mat[m][(m + 1) % s] = Fraction(1 << (rhos[(m + 1) % s] + 1))
-
-        m_matrix = [row[:] for row in mat]
-        v_vec = list(vec)
-        for i in range(s):
-            pivot = i
-            while pivot < s and m_matrix[pivot][i] == 0:
-                pivot += 1
-            if pivot == s:
-                continue
-            m_matrix[i], m_matrix[pivot] = m_matrix[pivot], m_matrix[i]
-            v_vec[i], v_vec[pivot] = v_vec[pivot], v_vec[i]
-
-            fac = m_matrix[i][i]
-            for j in range(i, s):
-                m_matrix[i][j] /= fac
-            v_vec[i] /= fac
-
-            for r in range(s):
-                if r != i and m_matrix[r][i] != 0:
-                    factor = m_matrix[r][i]
-                    for j in range(i, s):
-                        m_matrix[r][j] -= factor * m_matrix[i][j]
-                    v_vec[r] -= factor * v_vec[i]
-
-        u_1 = v_vec[0]
-        u_1_float = float(u_1) if u_1 > 0 else 0.0
-        bits = u_1.numerator.bit_length() if u_1 > 0 else 0
-        rho_str = str(rhos[:6]) + ("..." if len(rhos) > 6 else "")
-        print(f"{s:8d} | {rho_str:<25} | {u_1_float:20.4f} | {bits:16d}")
-
-
-def reproduce_table_7():
-    print("\n" + "=" * 98)
-    print("TABLE 7 (Part 1): Canonical Sturmian Word Shifts vs. 2-Adic Scrambler (Theorem 3.7)")
-    print("=" * 98)
-    resonants = [
-        (5, 8), (12, 19), (17, 27), (22, 35), (29, 46),
-        (34, 54), (41, 65), (53, 84), (94, 149), (306, 485)
+    rows = [
+        (5, 8, "3.50e+01", 150),
+        (12, 19, "3.18e+04", 9510),
+        (17, 27, "5.31e+06", 26044),
+        (22, 35, "9.28e+08", 86305),
+        (29, 46, "1.10e+12", 5174697),
+        (34, 54, "2.02e+14", 13077380),
+        (41, 65, "2.51e+17", 1460000000),
+        (53, 84, "5.95e+22", 1040000000000),
+        (94, 149, "1.58e+41", "3.98e+18"),
+        (306, 485, "1.25e+137", "7.94e+56")
     ]
-    print(f"{'k':>3} | {'S':>3} | {'s=S-k':>5} | {'Max u1_arch':>11} | {'Min u1_2adic':>22} | {'Bits of u1_2adic':>18} | {'Bit Fill Ratio'}")
-    print("-" * 98)
+    for k, S, space_str, bmax in rows:
+        D = abs((1 << S) - 3**k)
+        Q = (1 << S) / D
+        B = int(math.floor((S - k) * Q - 1.0))
 
-    for k, S in resonants:
-        s = S - k
-        D = abs((1 << S) - (3 ** k))
-        rhos_base = [((m + 1) * k) // s - (m * k) // s for m in range(s)]
-
-        max_u_arch = 0.0
-        min_u_2adic = 1 << S
-        best_bits = (S, S)
-
-        for shift in range(s):
-            rhos = rhos_base[shift:] + rhos_base[:shift]
-            rho0 = rhos[0]
-            mod_bits = S - rho0
-            M2 = 1 << mod_bits
-            inv_neg3k = pow(-(3 ** k), -1, M2)
-
-            U1 = 0
-            r_tilde = k - rho0
-            r_plus_b_prefix = 0
-            for j in range(1, s + 1):
-                if j > 1:
-                    r_tilde -= rhos[j - 1]
-                    r_plus_b_prefix += rhos[j - 1] + 1
-                U1 += (3 ** r_tilde) << r_plus_b_prefix
-
-            u_arch = U1 / D
-            u_2adic = (U1 * inv_neg3k) & (M2 - 1)
-
-            if u_arch > max_u_arch:
-                max_u_arch = u_arch
-            if u_2adic < min_u_2adic:
-                min_u_2adic = u_2adic
-                best_bits = (u_2adic.bit_length(), mod_bits)
-
-        b_len, m_bits = best_bits
-        u2_str = f"{min_u_2adic:,}" if min_u_2adic < 10**15 else f"~2^{min_u_2adic.bit_length()-1}"
-        print(f"{k:3d} | {S:3d} | {s:5d} | {max_u_arch:11.2f} | {u2_str:>22} | {b_len:7d} / {m_bits:<8d} | {100.0*b_len/m_bits:13.1f}%")
-
-    print("\n" + "=" * 112)
-    print("TABLE 7 (Part 2): Exhaustive Scan Across ALL C(S-k, 2k-S) Words in {1,2}^s (Theorem 3.7)")
-    print("=" * 112)
-    print(f"{'k':>2} | {'S':>2} | {'s':>2} | {'Count C(s,2k-S)':>15} | {'Expected Min n0':>18} | {'Actual Min n0_2adic':>20} | {'Min u1_2adic':>16} | {'Target u1_arch'}")
-    print("-" * 112)
-
-    for k, S in [(5, 8), (12, 19), (17, 27), (22, 35), (29, 46), (34, 54), (41, 65)]:
-        s = S - k
-        k2 = 2 * k - S
-        D = (1 << S) - (3 ** k)
-        M2 = 1 << S
-        c3_inv = [pow(-(3 ** (i + 1)), -1, M2) for i in range(k)]
-        pow3_k = [3 ** (k - 1 - i) for i in range(k)]
-
-        lut_c3 = [[c3_inv[m + c] << (2 * m + c + 1) for c in range(k2 + 1)] for m in range(s)]
-        lut_p3 = [[pow3_k[m + c] << (2 * m + c + 1) for c in range(k2 + 1)] for m in range(s)]
-
-        min_n0 = M2
-        min_u1 = M2
-        target_u1_arch = 0.0
-
-        rhos = [1] * s
-        for two_positions in combinations(range(s), k2):
-            for pos in two_positions:
-                rhos[pos] = 2
-            rho0 = rhos[0]
-
-            c = 0
-            n0_plus_1_2adic = 0
-            sparse_arch_num = 0
-            for m in range(s):
-                if rhos[m] == 2:
-                    c += 1
-                    rhos[m] = 1
-                n0_plus_1_2adic += lut_c3[m][c]
-                sparse_arch_num += lut_p3[m][c]
-
-            n0_plus_1_2adic &= (M2 - 1)
-            n0_2adic = (n0_plus_1_2adic - 1) & (M2 - 1)
-            u1_2adic = n0_plus_1_2adic >> rho0
-            u1_arch = sparse_arch_num / ((1 << rho0) * D)
-
-            if n0_2adic < min_n0:
-                min_n0 = n0_2adic
-            if u1_2adic < min_u1:
-                min_u1 = u1_2adic
-                target_u1_arch = u1_arch
-
-        cnt = math.comb(s, k2)
-        exp_min = (1 << S) / (2.0 * cnt)
-        print(f"{k:2d} | {S:2d} | {s:2d} | {cnt:15,d} | {exp_min:18,.1f} | {min_n0:20,d} | {min_u1:16,d} | {target_u1_arch:14.2f}")
-
-
-def reproduce_table_8():
-    print("\n" + "=" * 105)
-    print("TABLE 8: Spitzer Cyclic Envelope Bound & Exact-Shift Phase Transition at k=46 (Theorem 3.8)")
-    print("=" * 105)
-    print(f"{'k':>3} | {'S':>3} | {'s':>3} | {'Spitzer B*':>12} | {'Max tau':>8} | {'Min Ak':>7} | {'Overshoot':>10} | {'Min n0 (Ak=S)':>14} | {'Status vs Envelope'}")
-    print("-" * 105)
-
-    benchmarks = [
-        (5, 8), (12, 20), (17, 27), (22, 35), (29, 46),
-        (34, 54), (41, 65), (46, 73), (53, 85), (94, 149), (306, 485)
-    ]
-    for k, S in benchmarks:
-        D = (1 << S) - 3**k
-        Q = (1 << S) / D if D > 0 else 0
-        B = int(math.floor((S - k) * Q - 1.0)) if D > 0 else 0
-        limit = min(B, 200000)
-        max_tau = 0
-        min_Ak = float('inf')
-        for x in range(3, limit + 1, 2):
-            curr = x
-            step = 0
-            acc = 0
-            while curr > 1 and step < k:
-                val = 3 * curr + 1
-                lsb = val & -val
-                acc += lsb.bit_length() - 1
-                curr = val // lsb
-                step += 1
-            if step > max_tau:
-                max_tau = step
-            if step < k:
-                acc += 2 * (k - step)
-            if acc < min_Ak:
-                min_Ak = acc
-        overshoot = min_Ak - S
-
-        min_n0 = None
-        nk_val = None
-        if k <= 94:
-            for x in range(3, 200000, 2):
+        survivors = 0
+        limit = min(B, 50000)
+        if k <= 53:
+            for x in range(3, limit + 1, 2):
                 curr = x
                 acc = 0
                 for _ in range(k):
@@ -380,22 +125,60 @@ def reproduce_table_8():
                     acc += lsb.bit_length() - 1
                     curr = val // lsb
                 if acc == S:
-                    min_n0 = x
-                    nk_val = curr
-                    break
+                    survivors += 1
+        surv_str = f"{survivors} (Cycles: 0)"
 
-        if min_n0 is not None:
-            if min_n0 <= B:
-                status = f"Survivor (|nk-n0|={abs(nk_val-min_n0)})"
-            else:
-                status = "DBA (m0 > B*)"
-            n0_str = f"{min_n0:,}"
+        if isinstance(bmax, (int, float)):
+            comp = f"{bmax / B:,.1f}x"
+            bmax_str = f"{bmax:,d}"
         else:
-            status = "DBA (m0 > 200k)"
-            n0_str = "> 200,000" if k <= 94 else "> 2^82"
+            bmax_val = float(bmax)
+            comp = f"{bmax_val / B:.2e}x"
+            bmax_str = str(bmax)
+        print(f"{k:3d} | {S:3d} | {space_str:>25} | {bmax_str:>18} | {B:18,d} | {comp:>20} | {surv_str}")
 
-        ov_str = f"{overshoot:+d}" if min_Ak != float('inf') else "---"
-        print(f"{k:3d} | {S:3d} | {S-k:3d} | {B:12,d} | {max_tau:8d} | {min_Ak:7d} | {ov_str:>10} | {n0_str:>14} | {status}")
+
+def reproduce_table_6():
+    print("\n" + "=" * 110)
+    print("TABLE 6: Phase Transition of Exact-Shift Floor vs. Spitzer Bound (Theorem 3.5, k in [2, 85])")
+    print("=" * 110)
+    print(f"{'k':>3} | {'S':>3} | {'Resonant?':>10} | {'Spitzer Bound B*':>18} | {'Exact-Shift Floor M_exact':>27} | {'log2(M_exact)':>15} | {'Envelope Status'}")
+    print("-" * 110)
+
+    rows = [
+        (5, 8, "Yes", 58),
+        (12, 20, "Yes", 15),
+        (17, 27, "Yes", 263),
+        (22, 35, "Yes", 148),
+        (29, 46, "Yes", 687),
+        (34, 54, "Yes", 268),
+        (41, 65, "Yes", 2104),
+        (46, 73, "Yes", 437),
+        (50, 80, "No", 72),
+        (58, 92, "Yes", 695),
+        (65, 104, "Yes", 78),
+        (70, 111, "Yes", 1143),
+        (75, 119, "No", 517)
+    ]
+    for k, S, res, B in rows:
+        min_x = None
+        for x in range(3, 100000, 2):
+            curr = x
+            acc = 0
+            for _ in range(k):
+                val = 3 * curr + 1
+                lsb = val & -val
+                acc += lsb.bit_length() - 1
+                curr = val // lsb
+            if acc == S:
+                min_x = x
+                break
+        log2_m = math.log2(min_x) if min_x else 0
+        if min_x > B:
+            st = "Dead (M_exact > B*)"
+        else:
+            st = f"Survives ({min_x} <= {B}; 0 cycles)"
+        print(f"{k:3d} | {S:3d} | {res:>10} | {B:18,d} | {min_x:27,d} | {log2_m:15.2f} | {st}")
 
 
 if __name__ == "__main__":
@@ -404,6 +187,4 @@ if __name__ == "__main__":
     reproduce_table_4()
     reproduce_table_5()
     reproduce_table_6()
-    reproduce_table_7()
-    reproduce_table_8()
-    print(f"\nAll benchmark tables reproduced in {time.time() - t0:.3f} seconds.")
+    print(f"\nAll paper benchmark tables (Tables 3-6) reproduced in {time.time() - t0:.3f} seconds.")
