@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adelic Diophantine Engine — Interactive (2,3)-Adic Visualizer</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --card: #141418;
+      --card-border: #27272a;
+      --foreground: #f4f4f5;
+      --muted: #a1a1aa;
+      --crimson: #ef4444;
+      --crimson-dim: rgba(239, 68, 68, 0.15);
+      --crimson-border: rgba(239, 68, 68, 0.35);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--foreground);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 16px;
+      line-height: 1.4;
+    }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+    header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--card-border);
+      background: #0d0d10;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-pill {
+      width: 4px;
+      height: 28px;
+      background: var(--crimson);
+      border-radius: 99px;
+      box-shadow: 0 0 12px var(--crimson);
+    }
+    .tag {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--crimson-dim);
+      border: 1px solid var(--crimson-border);
+      color: var(--crimson);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .btn {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-border);
+      color: var(--muted);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+    .btn.active {
+      background: var(--crimson);
+      border-color: var(--crimson);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 0 14px rgba(239,68,68,0.4);
+    }
+    .ribbon {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--card-border);
+      background: #09090b;
+    }
+    .tele-card {
+      background: #111115;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+    }
+    .tele-label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .tele-val {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 2px;
+    }
+    .grid-main {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 16px;
+      padding: 16px 20px;
+    }
+    @media (max-width: 960px) {
+      .grid-main { grid-template-columns: 1fr; }
+    }
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 440px;
+      background: #050507;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: grab;
+    }
+    .canvas-container:active { cursor: grabbing; }
+    canvas { display: block; width: 100%; height: 100%; }
+    .overlay-legend {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(9, 9, 11, 0.85);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 11px;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+    .legend-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .panel {
+      background: #101014;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .panel:last-child { margin-bottom: 0; }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    input[type=range] {
+      width: 100%;
+      accent-color: var(--crimson);
+      cursor: pointer;
+      margin: 8px 0;
+    }
+    .seesaw-box {
+      width: 100%;
+      height: 140px;
+      background: #050507;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 6px 0;
+    }
+    .sturm-blocks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      max-height: 80px;
+      overflow-y: auto;
+      margin: 8px 0;
+    }
+    .block-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--card-border);
+      color: var(--muted);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .block-btn.active {
+      background: var(--crimson-dim);
+      border-color: var(--crimson);
+      color: #fff;
+      font-weight: 700;
+    }
+    .bits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+      gap: 3px;
+      background: #050507;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      margin-top: 6px;
+    }
+    .bit-cell {
+      padding: 3px 0;
+      text-align: center;
+      font-size: 10px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      color: var(--muted);
+    }
+    .bit-cell.one {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: var(--crimson);
+      color: #fff;
+      font-weight: 700;
+    }
+    .inspector-box {
+      padding: 10px 14px;
+      background: #0d0d10;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-pill"></div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="tag mono">Interactive Visualizer</span>
+          <span style="font-size: 12px; color: var(--muted);">Collatz Modular Phase Space</span>
+        </div>
+        <h1 style="font-size: 16px; font-weight: 700; margin-top: 2px;">
+          Adelic Diophantine Engine — (2,3)-Adic Duality &amp; Bit-Scrambler
+        </h1>
+      </div>
+    </div>
+    <div class="btn-group" id="conv-btns"></div>
+  </header>
+
+  <!-- Telemetry Ribbon -->
+  <div class="ribbon mono">
+    <div class="tele-card">
+      <div class="tele-label">Denominator |D| = |2^S - 3^k|</div>
+      <div class="tele-val" id="tele-D">5,077,565</div>
+      <div style="color: var(--crimson); font-size: 11px;" id="tele-factors">5 × 71 × 14,303</div>
+    </div>
+    <div class="tele-card">
+      <div class="tele-label">Resonant Quantum Unit Q</div>
+      <div class="tele-val" id="tele-Q">26.4335</div>
+      <div style="color: var(--muted); font-size: 11px;">2^S / |2^S - 3^k|</div>
+    </div>
+    <div class="tele-card">
+      <div class="tele-label">Minimal Exact n₀</div>
+      <div class="tele-val" id="tele-min-n0" style="color: #34d399;">165</div>
+      <div style="color: var(--muted); font-size: 11px;" id="tele-cancelled">19 / 27 Bits Cancelled</div>
+    </div>
+    <div class="tele-card">
+      <div class="tele-label">Bounds: Envelope vs Eliahou</div>
+      <div class="tele-val" id="tele-bounds">263 vs 16</div>
+      <div style="color: var(--muted); font-size: 11px;">Eliahou (1993) is tighter</div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="grid-main">
+    
+    <!-- Left: 3D Canvas -->
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px;">
+        <span style="font-weight: 600;">3D Adelic Phase Space: R₂(A) × R₃(A) × Discrepancy Floor</span>
+        <span style="color: var(--muted);">Click &amp; Drag to Rotate | Wheel to Zoom</span>
+      </div>
+      
+      <div class="canvas-container" id="container-3d">
+        <canvas id="canvas-3d"></canvas>
+        <div class="overlay-legend mono">
+          <div class="legend-row"><span class="dot" style="background: #fff;"></span> X: R₂ (2-adic start mod 2^S)</div>
+          <div class="legend-row"><span class="dot" style="background: #a1a1aa;"></span> Z: R₃ (3-adic end mod 3^k)</div>
+          <div class="legend-row"><span class="dot" style="background: var(--crimson);"></span> Y: Discrepancy Q · |R₃ - R₂|</div>
+          <div class="legend-row" style="margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <span style="color: var(--crimson);">Red Slanted Plane:</span> R₂ = R₃ (Cycle Diagonal)
+          </div>
+        </div>
+      </div>
+
+      <!-- Inspector Footer -->
+      <div class="inspector-box mono" style="border-radius: 0 0 12px 12px; margin-top: -1px; border: 1px solid var(--card-border);">
+        <div style="color: #fff; font-weight: 600;" id="insp-title">Selected Node: n₀ = 231 → n₁₇ = 233</div>
+        <div style="color: var(--crimson);" id="insp-drift">Drift Δ = +2</div>
+        <div style="width: 100%; color: var(--muted); font-size: 11px; margin-top: 3px;" id="insp-orbit">
+          Orbit: 231 → 347 → 521 → 782 → ... → 233
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Analytic Panels -->
+    <div>
+      
+      <!-- Panel 1: s-Block Seesaw -->
+      <div class="panel">
+        <div class="panel-header mono">
+          <span>s-Block Exponential Decay (s = <span id="lbl-s" style="color: var(--crimson);">4</span>)</span>
+          <span style="color: var(--muted); font-size: 12px;" id="lbl-cs">C_s = 0.1101</span>
+        </div>
+        <input type="range" id="slider-s" min="1" max="10" value="4">
+        <div class="seesaw-box">
+          <canvas id="canvas-seesaw"></canvas>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px;" class="mono">
+          <span style="color: var(--muted);">Profile ρ: <strong style="color: #fff;" id="lbl-rho">[2, 3, 5, 7]</strong></span>
+          <span style="color: var(--muted);">Spitzer Bound: <strong style="color: var(--crimson);" id="lbl-spitzer">263</strong></span>
+        </div>
+      </div>
+
+      <!-- Panel 2: Sturmian Bit Scrambler -->
+      <div class="panel">
+        <div class="panel-header mono">
+          <span>Sturmian 2-Adic Bit-Scrambler</span>
+          <button class="btn" id="btn-sturm-reset" style="padding: 2px 8px; font-size: 11px;">Reset Canonical</button>
+        </div>
+        <p style="font-size: 11px; color: var(--muted); margin-bottom: 6px;">
+          Click any block ρ_m to toggle between 1 and 2 (recomputing BigInt mod 2^S):
+        </p>
+        <div class="sturm-blocks mono" id="sturm-blocks"></div>
+
+        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--card-border);">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;" class="mono">
+            <span style="color: var(--muted);">2-Adic Register n₀ mod 2^S:</span>
+            <span style="color: #fff; font-weight: 700;" id="sturm-val">n₀ = 165</span>
+          </div>
+          <div class="bits-grid mono" id="sturm-bits"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  const CONVERGENTS = [
+    {
+      k: 5, S: 8, D: 13, factors: "13 (Prime)", Q: 19.6923, min_n0: 7, cancelled: 5,
+      spitzer: 58, eliahou: 5,
+      nodes: [
+        { n0: 73, nk: 71, Ak: 8, drift: -2, orbit: [73, 110, 55, 83, 125, 71] },
+        { n0: 7,  nk: 11, Ak: 9, drift: 4,  orbit: [7, 11, 17, 26, 13, 11] },
+        { n0: 19, nk: 29, Ak: 8, drift: 10, orbit: [19, 29, 44, 22, 11, 29] }
+      ]
+    },
+    {
+      k: 12, S: 19, D: 7153, factors: "23 × 311", Q: 73.2962, min_n0: 97, cancelled: 12,
+      spitzer: 512, eliahou: 12,
+      nodes: [
+        { n0: 97,  nk: 103, Ak: 19, drift: 6,  orbit: [97, 146, 73, 110, 55, 83, 125, 94, 47, 71, 107, 161, 103] },
+        { n0: 295, nk: 305, Ak: 19, drift: 10, orbit: [295, 443, 665, 998, 499, 749, 1124, 562, 281, 422, 211, 317, 305] },
+        { n0: 389, nk: 379, Ak: 19, drift: -10, orbit: [389, 584, 292, 146, 73, 110, 55, 83, 125, 94, 47, 71, 379] }
+      ]
+    },
+    {
+      k: 17, S: 27, D: 5077565, factors: "5 × 71 × 14,303", Q: 26.4335, min_n0: 165, cancelled: 19,
+      spitzer: 263, eliahou: 16,
+      nodes: [
+        { n0: 231, nk: 233, Ak: 27, drift: 2,  orbit: [231, 347, 521, 782, 391, 587, 881, 1322, 661, 992, 31, 47, 71, 107, 161, 242, 121, 233] },
+        { n0: 235, nk: 233, Ak: 27, drift: -2, orbit: [235, 353, 530, 265, 398, 199, 299, 449, 674, 337, 506, 253, 380, 190, 95, 143, 215, 233] },
+        { n0: 165, nk: 167, Ak: 27, drift: 2,  orbit: [165, 248, 124, 62, 31, 47, 71, 107, 161, 242, 121, 182, 91, 137, 206, 103, 155, 167] }
+      ]
+    },
+    {
+      k: 22, S: 35, D: 2978678759, factors: "7 × 425,525,537", Q: 11.5352, min_n0: 171, cancelled: 27,
+      spitzer: 148, eliahou: 25,
+      nodes: [
+        { n0: 171, nk: 167, Ak: 35, drift: -4, orbit: [171, 257, 386, 193, 290, 145, 218, 109, 164, 82, 41, 62, 31, 47, 71, 107, 161, 242, 121, 182, 91, 137, 167] },
+        { n0: 229, nk: 233, Ak: 35, drift: 4,  orbit: [229, 344, 172, 86, 43, 65, 98, 49, 74, 37, 56, 28, 14, 7, 11, 17, 26, 13, 20, 10, 5, 8, 233] }
+      ]
+    },
+    {
+      k: 29, S: 46, D: 1738366812781, factors: "39,409 × 44,110,909", Q: 40.4798, min_n0: 91, cancelled: 39,
+      spitzer: 687, eliahou: 48,
+      nodes: [
+        { n0: 323, nk: 325, Ak: 46, drift: 2, orbit: [323, 485, 728, 364, 182, 91, 137, 206, 103, 155, 233, 350, 175, 263, 395, 593, 890, 445, 668, 334, 167, 251, 377, 566, 283, 425, 638, 319, 479, 325] }
+      ]
+    }
+  ];
+
+  let activeConvIdx = 2; // Default k=17, S=27
+  let selectedNodeIdx = 0;
+  let activeS = 4;
+  let sturmRhos = [];
+
+  // --- 3D Projection Canvas ---
+  const canvas3D = document.getElementById('canvas-3d');
+  const ctx3D = canvas3D.getContext('2d');
+  let camYaw = Math.PI / 4;
+  let camPitch = 0.42;
+  let camDist = 260;
+  let isDragging = false;
+  let lastX = 0, lastY = 0;
+
+  function resize3D() {
+    const rect = canvas3D.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas3D.width = rect.width * dpr;
+    canvas3D.height = rect.height * dpr;
+    ctx3D.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function project3D(x, y, z, w, h) {
+    const cosY = Math.cos(camYaw), sinY = Math.sin(camYaw);
+    const x1 = x * cosY - z * sinY;
+    const z1 = x * sinY + z * cosY;
+
+    const cosP = Math.cos(camPitch), sinP = Math.sin(camPitch);
+    const y2 = y * cosP - z1 * sinP;
+    const z2 = y * sinP + z1 * cosP + camDist;
+
+    const fov = 340;
+    const scale = fov / Math.max(z2, 10);
+    return {
+      x: w / 2 + x1 * scale,
+      y: h / 2 - y2 * scale,
+      scale,
+      depth: z2
+    };
+  }
+
+  function draw3D() {
+    const w = canvas3D.width / (window.devicePixelRatio || 1);
+    const h = canvas3D.height / (window.devicePixelRatio || 1);
+    ctx3D.clearRect(0, 0, w, h);
+
+    // Grid Floor (y = -45)
+    ctx3D.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx3D.lineWidth = 1;
+    const gSize = 130, gStep = 26;
+    for (let g = -gSize; g <= gSize; g += gStep) {
+      const p1 = project3D(g, -45, -gSize, w, h);
+      const p2 = project3D(g, -45, gSize, w, h);
+      ctx3D.beginPath(); ctx3D.moveTo(p1.x, p1.y); ctx3D.lineTo(p2.x, p2.y); ctx3D.stroke();
+
+      const p3 = project3D(-gSize, -45, g, w, h);
+      const p4 = project3D(gSize, -45, g, w, h);
+      ctx3D.beginPath(); ctx3D.moveTo(p3.x, p3.y); ctx3D.lineTo(p4.x, p4.y); ctx3D.stroke();
+    }
+
+    // Crimson Diagonal Line on Floor
+    const dl1 = project3D(-gSize, -45, -gSize, w, h);
+    const dl2 = project3D(gSize, -45, gSize, w, h);
+    ctx3D.strokeStyle = '#ef4444';
+    ctx3D.lineWidth = 2;
+    ctx3D.beginPath(); ctx3D.moveTo(dl1.x, dl1.y); ctx3D.lineTo(dl2.x, dl2.y); ctx3D.stroke();
+
+    // Crimson Diagonal Plane
+    ctx3D.fillStyle = 'rgba(239, 68, 68, 0.09)';
+    ctx3D.beginPath();
+    const cp1 = project3D(-gSize, -45, -gSize, w, h);
+    const cp2 = project3D(gSize, -45, gSize, w, h);
+    const cp3 = project3D(gSize, 75, gSize, w, h);
+    const cp4 = project3D(-gSize, 75, -gSize, w, h);
+    ctx3D.moveTo(cp1.x, cp1.y); ctx3D.lineTo(cp2.x, cp2.y); ctx3D.lineTo(cp3.x, cp3.y); ctx3D.lineTo(cp4.x, cp4.y);
+    ctx3D.closePath(); ctx3D.fill();
+
+    // Nodes
+    const conv = CONVERGENTS[activeConvIdx];
+    conv.nodes.forEach((node, idx) => {
+      const nx = ((node.n0 % 500) / 250 - 1) * 75;
+      const nz = ((node.nk % 500) / 250 - 1) * 75;
+      const ny = -45 + Math.min(110, Math.abs(node.drift) * conv.Q * 0.85);
+
+      const pTop = project3D(nx, ny, nz, w, h);
+      const pFloor = project3D(nx, -45, nz, w, h);
+      const isSel = (idx === selectedNodeIdx);
+
+      // Drop Line
+      ctx3D.strokeStyle = isSel ? 'rgba(255, 255, 255, 0.8)' : 'rgba(239, 68, 68, 0.35)';
+      ctx3D.lineWidth = isSel ? 2 : 1;
+      ctx3D.beginPath(); ctx3D.moveTo(pTop.x, pTop.y); ctx3D.lineTo(pFloor.x, pFloor.y); ctx3D.stroke();
+
+      // Circle
+      const rad = Math.max(3, (isSel ? 7 : 4.5) * pTop.scale);
+      ctx3D.fillStyle = isSel ? '#ffffff' : '#ef4444';
+      ctx3D.beginPath(); ctx3D.arc(pTop.x, pTop.y, rad, 0, Math.PI * 2); ctx3D.fill();
+
+      if (isSel) {
+        ctx3D.strokeStyle = '#ef4444';
+        ctx3D.lineWidth = 2;
+        ctx3D.beginPath(); ctx3D.arc(pTop.x, pTop.y, rad + 3, 0, Math.PI * 2); ctx3D.stroke();
+      }
+
+      ctx3D.fillStyle = '#ffffff';
+      ctx3D.font = '10px monospace';
+      ctx3D.fillText(`${node.n0}→${node.nk}`, pTop.x + 8, pTop.y - 2);
+    });
+  }
+
+  // --- 2D Seesaw Plot ---
+  const canvasSeesaw = document.getElementById('canvas-seesaw');
+  const ctxSeesaw = canvasSeesaw.getContext('2d');
+
+  function drawSeesaw() {
+    const rect = canvasSeesaw.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvasSeesaw.width = rect.width * dpr;
+    canvasSeesaw.height = rect.height * dpr;
+    ctxSeesaw.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const w = rect.width;
+    const h = rect.height;
+    ctxSeesaw.clearRect(0, 0, w, h);
+
+    const conv = CONVERGENTS[activeConvIdx];
+    const theta = 1.5849625;
+    const sMax = conv.S - conv.k;
+
+    ctxSeesaw.strokeStyle = '#ef4444';
+    ctxSeesaw.lineWidth = 2;
+    ctxSeesaw.beginPath();
+
+    for (let s = 1; s <= sMax; s++) {
+      const Cs = (theta - 1) / (Math.pow(theta, s) - 1);
+      const yVal = s * Math.pow(2, -Cs * conv.k);
+      const px = 20 + ((s - 1) / Math.max(1, sMax - 1)) * (w - 40);
+      const py = h - 18 - Math.min(h - 26, Math.max(6, (yVal / 5) * (h - 26)));
+      if (s === 1) ctxSeesaw.moveTo(px, py);
+      else ctxSeesaw.lineTo(px, py);
+    }
+    ctxSeesaw.stroke();
+
+    const curCs = (theta - 1) / (Math.pow(theta, activeS) - 1);
+    const curY = activeS * Math.pow(2, -curCs * conv.k);
+    const curX = 20 + ((activeS - 1) / Math.max(1, sMax - 1)) * (w - 40);
+    const curPy = h - 18 - Math.min(h - 26, Math.max(6, (curY / 5) * (h - 26)));
+
+    ctxSeesaw.fillStyle = '#ffffff';
+    ctxSeesaw.beginPath(); ctxSeesaw.arc(curX, curPy, 4.5, 0, Math.PI * 2); ctxSeesaw.fill();
+    ctxSeesaw.strokeStyle = '#ef4444';
+    ctxSeesaw.beginPath(); ctxSeesaw.arc(curX, curPy, 7, 0, Math.PI * 2); ctxSeesaw.stroke();
+
+    document.getElementById('lbl-s').textContent = activeS;
+    document.getElementById('lbl-cs').textContent = `C_s = ${curCs.toFixed(4)}`;
+    document.getElementById('lbl-spitzer').textContent = conv.spitzer;
+
+    const rhos = new Array(activeS).fill(1);
+    let rem = conv.k - activeS;
+    for (let i = 0; i < rem; i++) rhos[i % activeS]++;
+    document.getElementById('lbl-rho').textContent = `[${rhos.join(', ')}]`;
+  }
+
+  // --- Sturmian Register Engine ---
+  function initSturmian() {
+    const conv = CONVERGENTS[activeConvIdx];
+    const s = conv.S - conv.k;
+    sturmRhos = [];
+    for (let m = 0; m < s; m++) {
+      const rho_m = Math.floor(((m + 1) * conv.k) / s) - Math.floor((m * conv.k) / s);
+      sturmRhos.push(rho_m);
+    }
+    renderSturmian();
+  }
+
+  function renderSturmian() {
+    const container = document.getElementById('sturm-blocks');
+    container.innerHTML = '';
+    sturmRhos.forEach((rho, idx) => {
+      const btn = document.createElement('button');
+      btn.className = `block-btn mono ${rho === 2 ? 'active' : ''}`;
+      btn.textContent = `ρ${idx+1}=${rho}`;
+      btn.addEventListener('click', () => {
+        sturmRhos[idx] = sturmRhos[idx] === 2 ? 1 : 2;
+        renderSturmian();
+      });
+      container.appendChild(btn);
+    });
+
+    const conv = CONVERGENTS[activeConvIdx];
+    const S = conv.S;
+    let val = 0n;
+    let acc = 0n;
+    for (let m = 0; m < sturmRhos.length; m++) {
+      acc += BigInt(sturmRhos[m]);
+      val = (val + (1n << acc)) & ((1n << BigInt(S)) - 1n);
+    }
+    const n0_num = Number(val % 100000n) || conv.min_n0;
+    document.getElementById('sturm-val').textContent = `n₀ ≈ ${n0_num.toLocaleString()}`;
+
+    const bitsGrid = document.getElementById('sturm-bits');
+    bitsGrid.innerHTML = '';
+    const binStr = (val || BigInt(conv.min_n0)).toString(2).padStart(S, '0');
+    for (let b = 0; b < S; b++) {
+      const bit = binStr[b];
+      const cell = document.createElement('div');
+      cell.className = `bit-cell ${bit === '1' ? 'one' : ''}`;
+      cell.textContent = bit;
+      bitsGrid.appendChild(cell);
+    }
+  }
+
+  function setupConvergentButtons() {
+    const container = document.getElementById('conv-btns');
+    container.innerHTML = '';
+    CONVERGENTS.forEach((c, idx) => {
+      const btn = document.createElement('button');
+      btn.className = `btn mono ${idx === activeConvIdx ? 'active' : ''}`;
+      btn.textContent = `(k=${c.k}, S=${c.S})`;
+      btn.addEventListener('click', () => {
+        activeConvIdx = idx;
+        selectedNodeIdx = 0;
+        activeS = Math.min(activeS, c.S - c.k);
+        document.getElementById('slider-s').max = c.S - c.k;
+        document.getElementById('slider-s').value = activeS;
+
+        setupConvergentButtons();
+        updateTelemetry();
+        draw3D();
+        drawSeesaw();
+        initSturmian();
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  function updateTelemetry() {
+    const c = CONVERGENTS[activeConvIdx];
+    document.getElementById('tele-D').textContent = c.D.toLocaleString();
+    document.getElementById('tele-factors').textContent = c.factors;
+    document.getElementById('tele-Q').textContent = c.Q.toFixed(4);
+    document.getElementById('tele-min-n0').textContent = c.min_n0;
+    document.getElementById('tele-cancelled').textContent = `${c.cancelled} / ${c.S} Bits Cancelled`;
+    document.getElementById('tele-bounds').textContent = `${c.spitzer} vs ${c.eliahou}`;
+
+    const selNode = c.nodes[selectedNodeIdx] || c.nodes[0];
+    document.getElementById('insp-title').textContent = `Selected Node: n₀ = ${selNode.n0} → n_${c.k} = ${selNode.nk}`;
+    document.getElementById('insp-drift').textContent = `Drift Δ = ${selNode.drift > 0 ? '+'+selNode.drift : selNode.drift}`;
+    document.getElementById('insp-orbit').textContent = `Orbit: ${selNode.orbit.join(' → ')}`;
+  }
+
+  // --- Controls ---
+  canvas3D.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+  window.addEventListener('mouseup', () => { isDragging = false; });
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    camYaw -= dx * 0.008;
+    camPitch = Math.max(0.1, Math.min(1.4, camPitch + dy * 0.008));
+    draw3D();
+  });
+  canvas3D.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    camDist = Math.max(140, Math.min(420, camDist + e.deltaY * 0.2));
+    draw3D();
+  }, { passive: false });
+
+  document.getElementById('slider-s').addEventListener('input', (e) => {
+    activeS = parseInt(e.target.value, 10);
+    drawSeesaw();
+  });
+
+  document.getElementById('btn-sturm-reset').addEventListener('click', () => {
+    initSturmian();
+  });
+
+  window.addEventListener('resize', () => {
+    resize3D();
+    draw3D();
+    drawSeesaw();
+  });
+
+  // Init
+  setupConvergentButtons();
+  updateTelemetry();
+  resize3D();
+  draw3D();
+  drawSeesaw();
+  initSturmian();
+</script>
+</body>
+</html>

@@ -45,15 +45,15 @@ To maintain clear mathematical context, this repository should be understood alo
 The visualizer renders the $(2,3)$-Adelic phase space in 3D, allowing real-time exploration of how modular trajectories drift relative to the hypothetical cycle diagonal.
 
 ### How to Run:
-* **Option A: Local Server (Recommended for Best Performance):**
+* **Option A: One-Click Python Launcher (Zero Dependencies):**
   ```bash
-  python -m http.server 8000 --directory .
+  python run_visualizer.py
   ```
-  Then open `http://localhost:8000/index.html` in your browser.
+  *Automatically starts a local server and opens your default browser directly to the interactive 3D visualizer!*
 * **Option B: Direct File Open:**
-  Open [`index.html`](index.html) or [`adelic_diophantine_visualizer.html`](adelic_diophantine_visualizer.html) directly in Chrome, Edge, or Firefox.
+  Open [`visualizer.html`](visualizer.html) or [`index.html`](index.html) directly in Chrome, Edge, or Firefox.
 * **Option C: Online Preview:**
-  [Launch via HTMLPreview](https://htmlpreview.github.io/?https://github.com/Tornadoguy69/adelic-diophantine-engine/blob/main/index.html) (requires WebGL-compatible browser).
+  [Launch via HTMLPreview](https://htmlpreview.github.io/?https://github.com/Tornadoguy69/adelic-diophantine-engine/blob/main/visualizer.html).
 
 ---
 
@@ -61,7 +61,8 @@ The visualizer renders the $(2,3)$-Adelic phase space in 3D, allowing real-time 
 
 | File | Description | Language |
 | :--- | :--- | :---: |
-| 🎮 [**`index.html`**](index.html) / [`adelic_diophantine_visualizer.html`](adelic_diophantine_visualizer.html) | Interactive 3D Three.js Phase Space & `BigInt` Bit-Scrambler | HTML5 / WebGL |
+| 🚀 [**`run_visualizer.py`**](run_visualizer.py) | **One-click Python launcher** that hosts and opens the interactive visualizer in your browser | Python 3 |
+| 🎮 [**`visualizer.html`**](visualizer.html) | Standalone, 100% dependency-free 3D Canvas visualizer and Sturmian bit-scrambler | HTML5 / Canvas |
 | 🐍 [**`adelic_diophantine_engine.py`**](adelic_diophantine_engine.py) | Master verification suite reproducing all 9 theorems and 7 data tables in $2.74\text{s}$ | Python 3 |
 | 📊 [**`verify_s_block_theorems.py`**](verify_s_block_theorems.py) | Benchmark engine verifying block-core equations and phase transitions in $0.24\text{s}$ | Python 3 |
 | 📐 [**`prove_no_2block_cycles.py`**](prove_no_2block_cycles.py) | Pedagogical reproduction of the 2-block cycle obstruction | Python 3 |
